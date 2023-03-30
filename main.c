@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct process {
     int time_arrived;
@@ -9,19 +10,34 @@ typedef struct process {
     int memory_requirement;
 } process;
 
-int read_file(char *filename, process *processes_list);
+void read_file(char *filename, process *processes_list);
 
 int main(int argc, char *argv[]) {
-    // Read command line arguments
-    if (argc<5){
-        printf("Incorrect number of arguments\n");
-        exit(1);
+    char *filename;
+    char *scheduler;
+    char *memory_strategy;
+    int quantum;
+
+    int arg;
+    extern char *optarg;
+    while ((arg = getopt(argc, argv, "f:s:m:q:"))!=-1){
+        switch (arg){
+            case 'f':
+                filename = optarg;
+                break;
+            case 's':
+                scheduler = optarg;
+                break;
+            case 'm':
+                memory_strategy = optarg;
+                break;
+            case 'q':
+                quantum = atoi(optarg);
+                break;
+        }
     }
 
-    char *filename = argv[1];
-    char *scheduler = argv[2];
-    char *memory_strategy = argv[3];
-    int quantum = atoi(argv[4]);
+    // printf("%s, %s, %s, %d\n", filename, scheduler, memory_strategy, quantum);
 
     process processes_list[1000];   // change later
     read_file(filename, &processes_list);
@@ -34,7 +50,7 @@ int main(int argc, char *argv[]) {
 }
 
 /* Read processes from file into an array */
-int read_file(char *filename, process *processes_list){
+void read_file(char *filename, process *processes_list){
     FILE *file_ptr;
 
     file_ptr = fopen(filename, "r");
@@ -64,7 +80,5 @@ int read_file(char *filename, process *processes_list){
     }
 
     fclose(file_ptr);
-
-    return 0;
 }
 
