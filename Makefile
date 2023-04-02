@@ -1,16 +1,16 @@
 EXE=allocate
 
-$(EXE): main.c process_manager.o utils.o
-	cc -Wall -o $(EXE) $<
+$(EXE): main.c process_manager.o utils.o queue.o
+	cc -Wall -o $(EXE) main.c process_manager.o utils.o queue.o
 
 process_manager.o: process_manager.c process_manager.h
-	cc -Wall -c process_manager.c -g
+	cc -Wall -c process_manager.c
 
 utils.o: utils.c utils.h process_manager.h
-	cc -Wall -c utils.c -g
+	cc -Wall -c utils.c
 
-queue.o: queue.c queue.h
-	cc -Wall -c queue.c -g
+queue.o: queue.c queue.h process_manager.h
+	cc -Wall -c queue.c
 
 format:
 	clang-format -style=file -i *.c

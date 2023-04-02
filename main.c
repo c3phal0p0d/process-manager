@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
             case 'm':
                 memory_strategy = optarg;
                 break;
-            case 'q':
+            case 'q': 
                 quantum = atoi(optarg);
                 break;
         }
