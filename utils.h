@@ -1,8 +1,8 @@
-#include "process_manager.h"
-
 #ifndef UTILS_H
 #define UTILS_H
 
-void read_file(char *filename, process *processes_list);
+#include "process_manager.h"
+
+void read_file(char *filename, process_t *processes_list);
 
 #endif

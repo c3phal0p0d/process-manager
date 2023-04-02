@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     // printf("%s, %s, %s, %d\n", filename, scheduler, memory_strategy, quantum);
 
-    process processes_list[1000];   // change later
+    process_t processes_list[1000];   // change later
     read_file(filename, &processes_list);
 
     // for (int i=0; i<4; i++){

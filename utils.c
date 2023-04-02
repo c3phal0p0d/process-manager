@@ -4,7 +4,7 @@
 #include "process_manager.h"
 
 /* Read processes from file into an array */
-void read_file(char *filename, process *processes_list){
+void read_file(char *filename, process_t *processes_list){
     FILE *file_ptr;
 
     file_ptr = fopen(filename, "r");
@@ -23,13 +23,13 @@ void read_file(char *filename, process *processes_list){
         int service_time = atoi(strtok(NULL, " "));
         int memory_requirement = atoi(strtok(NULL, " "));
 
-        process process_from_file;
-        process_from_file.time_arrived = time_arrived;
-        strcpy(process_from_file.process_name, process_name);
-        process_from_file.service_time = service_time;
-        process_from_file.memory_requirement = memory_requirement;
+        process_t process;
+        process.time_arrived = time_arrived;
+        strcpy(process.process_name, process_name);
+        process.service_time = service_time;
+        process.memory_requirement = memory_requirement;
 
-        processes_list[n] = process_from_file;
+        processes_list[n] = process;
         n++;
     }
 

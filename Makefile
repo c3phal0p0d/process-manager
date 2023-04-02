@@ -9,5 +9,8 @@ process_manager.o: process_manager.c process_manager.h
 utils.o: utils.c utils.h process_manager.h
 	cc -Wall -c utils.c -g
 
+queue.o: queue.c queue.h
+	cc -Wall -c queue.c -g
+
 format:
 	clang-format -style=file -i *.c
