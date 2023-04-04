@@ -3,6 +3,7 @@
 
 #include "process_manager.h"
 
-void read_file(char *filename, process_t *processes_list);
+int read_file(char *filename, process_t *processes_list);
+int allocate_memory(process_t process, char *memory_strategy);
 
 #endif

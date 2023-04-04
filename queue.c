@@ -4,6 +4,7 @@
 
 queue_t *initialize_queue(){
     queue_t *queue = malloc(sizeof(queue_t));
+    queue->size = 0;
     queue->front = NULL;
     queue->rear = NULL;
 
@@ -33,6 +34,7 @@ void enqueue(queue_t *queue, process_t process){
 
     queue->rear->next = node;
     queue->rear = node;
+    queue->size++;
 }
 
 node_t *dequeue(queue_t *queue){
@@ -47,7 +49,13 @@ node_t *dequeue(queue_t *queue){
         queue->rear=NULL;
     }
 
+    queue->size--;
+
     return front;
+}
+
+void print_queue(queue_t *queue){
+    
 }
 
 void free_queue(queue_t *queue){
@@ -62,5 +70,4 @@ void free_queue(queue_t *queue){
 
     free(node);
     free(queue);
-
 }
