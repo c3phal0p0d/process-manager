@@ -14,3 +14,6 @@ queue.o: queue.c queue.h process_manager.h
 
 format:
 	clang-format -style=file -i *.c
+
+clean:
+	rm -f *.o allocate
