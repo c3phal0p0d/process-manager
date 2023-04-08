@@ -9,6 +9,7 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
     process->time_arrived = time_arrived;
     strcpy(process->process_name, process_name);
     process->service_time = service_time;
+    process->run_time = 0;
     process->memory_requirement = memory_requirement;
     process->state = NULL;
 
@@ -22,22 +23,36 @@ void print_process(process_t *process){
     printf("%d\n", process->memory_requirement);
 }
 
-void shortest_job_first_scheduler(queue_t *ready_queue){
-    int shortest_service_time = -1;
-    process_t process;
+process_t *schedule_process(queue_t *ready_queue, char *scheduler){
+    process_t* process_to_run = NULL;
 
-    // iterate through queue
-    for (int i; i<ready_queue->size; i++){
-        // process = ready_queue process
-        if (shortest_service_time==-1){ 
-            shortest_service_time = process.service_time;
+    // Schedule process according to the Shortest Job First algorithm
+    if (scheduler=="SJF"){
+        int shortest_service_time = -1;
+
+        // Iterate through queue to find process with shortest service time
+        node_t *node = ready_queue->front;
+        for (int i=0; i<ready_queue->size; i++){
+            if (shortest_service_time==-1){ 
+                shortest_service_time = node->process->service_time;
+            }
+            else if (node->process->service_time<shortest_service_time){
+                node->process->state = RUNNING;
+                process_to_run = node->process;
+            }
         }
-        else if (process.service_time<shortest_service_time){
-            // add process to running state
-        }
+    } 
+    // Schedule process according to the Round Robin algorithm
+    else if (scheduler=="RR"){
+        
     }
+
+    // remove process from ready queue?
+
+    return process_to_run;
 }
 
-void round_robin_scheduler(queue_t *ready_queue){
 
+int allocate_memory(process_t *process){
+    return 0;
 }

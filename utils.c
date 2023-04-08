@@ -34,13 +34,3 @@ int read_file(char *filename, queue_t *input_queue){
 
     fclose(file_ptr);
 }
-
-int allocate_memory(process_t *process, char *memory_strategy){
-    if (memory_strategy=="infinite"){
-
-    } else if (memory_strategy=="best-fit"){
-        
-    }
-
-    return 0;
-}

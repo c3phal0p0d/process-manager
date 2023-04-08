@@ -68,12 +68,12 @@ void print_queue(queue_t *queue){
         if (node == NULL){
             printf("NULL\n");
             return;
-        } else {
+        } 
+        else {
             print_process(node->process);
             node = node->next;
         }
     }
-
 }
 
 void free_queue(queue_t *queue){
