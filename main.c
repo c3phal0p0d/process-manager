@@ -31,23 +31,27 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // printf("%s, %s, %s, %d\n", filename, scheduler, memory_strategy, quantum);
+    printf("*** Args ***\n");
+    printf("%s, %s, %s, %d\n", filename, scheduler, memory_strategy, quantum);
 
-    process_t processes_list[1000];   // change later
-    int num_processes = read_file(filename, &processes_list);
+    queue_t *input_queue = initialize_queue();
+    read_file(filename, input_queue);
 
-    // for (int i=0; i<4; i++){
-    //     printf("%d %s %d %d\n", processes_list[i].time_arrived, processes_list[i].process_name, processes_list[i].service_time, processes_list[i].memory_requirement);
-    // }
+    printf("*** Input queue ***\n");
+    print_queue(input_queue);
 
     // Allocate memory to processes and add them to the ready queue
     queue_t *ready_queue = initialize_queue();
-    for (int i=0; i<num_processes; i++){
-        allocate_memory(processes_list[i], memory_strategy);
-        enqueue(ready_queue, processes_list[i]);
+    node_t *node = input_queue->front;
+    for (int i=0; i<input_queue->size; i++){
+        allocate_memory(node->process, memory_strategy);
+        node->process->state = READY;
+        enqueue(ready_queue, node->process);
+        node = node->next;
     }
 
-    // print_queue(ready_queue);
+    printf("*** Ready queue ***\n");
+    print_queue(ready_queue);
 
     // Schedule processes
     if (scheduler=="SJF"){

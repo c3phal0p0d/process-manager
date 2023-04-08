@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "process_manager.h"
+#include "queue.h"
 
-/* Read processes from file into an array */
-int read_file(char *filename, process_t *processes_list){
+/* Read processes from file into input queue */
+int read_file(char *filename, queue_t *input_queue){
     FILE *file_ptr;
 
     file_ptr = fopen(filename, "r");
@@ -23,13 +24,9 @@ int read_file(char *filename, process_t *processes_list){
         int service_time = atoi(strtok(NULL, " "));
         int memory_requirement = atoi(strtok(NULL, " "));
 
-        process_t process;
-        process.time_arrived = time_arrived;
-        strcpy(process.process_name, process_name);
-        process.service_time = service_time;
-        process.memory_requirement = memory_requirement;
+        process_t *process = create_process(time_arrived, process_name, service_time, memory_requirement);
 
-        processes_list[num_processes] = process;
+        enqueue(input_queue, process);
         num_processes++;
     }
 
@@ -38,7 +35,7 @@ int read_file(char *filename, process_t *processes_list){
     fclose(file_ptr);
 }
 
-int allocate_memory(process_t process, char *memory_strategy){
+int allocate_memory(process_t *process, char *memory_strategy){
     if (memory_strategy=="infinite"){
 
     } else if (memory_strategy=="best-fit"){
