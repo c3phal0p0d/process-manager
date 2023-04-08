@@ -11,7 +11,7 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
     process->service_time = service_time;
     process->run_time = 0;
     process->memory_requirement = memory_requirement;
-    process->state = NULL;
+    process->state = NONE;
 
     return process;
 }

@@ -6,6 +6,7 @@
 struct queue_t;
 
 enum process_state {
+    NONE,
     READY,
     RUNNING,
     FINISHED
