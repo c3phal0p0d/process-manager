@@ -40,7 +40,7 @@ void enqueue(queue_t *queue, process_t *process){
     queue->size++;
 }
 
-node_t *dequeue(queue_t *queue){
+process_t *dequeue(queue_t *queue){
     if (is_empty(queue)){
         return NULL;
     }
@@ -54,7 +54,7 @@ node_t *dequeue(queue_t *queue){
 
     queue->size--;
 
-    return front;
+    return front->process;
 }
 
 void print_queue(queue_t *queue){

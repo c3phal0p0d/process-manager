@@ -23,7 +23,7 @@ typedef struct process_t {
 
 process_t *create_process(int time_arrived, char* process_name, int service_time, int memory_requirement);
 void print_process(process_t *process);
-process_t *schedule_process(struct queue_t *ready_queue, char *scheduler);
+process_t *schedule_process(struct queue_t *ready_queue, char *scheduler, process_t *current_process);
 int allocate_memory(process_t *process);
 
 #endif
