@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
             node = node->next;
         }
-
+        
         // printf("*** Input queue ***\n");
         // print_queue(input_queue);
 
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
             simulation_time += quantum;
             num_cycles++;
         }
-        
+
         // printf("process: ");
         // print_process(current_process);
     }

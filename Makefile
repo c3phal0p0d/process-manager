@@ -1,7 +1,7 @@
 EXE=allocate
 
 $(EXE): main.c process_manager.o utils.o queue.o
-	cc -Wall -o $(EXE) main.c process_manager.o utils.o queue.o
+	cc -Wall -o $(EXE) main.c process_manager.o utils.o queue.o -lm
 
 process_manager.o: process_manager.c process_manager.h
 	cc -Wall -c process_manager.c
