@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
     queue_t *input_queue = initialize_queue();
     queue_t *ready_queue = initialize_queue();
     process_t *current_process = NULL;
+    process_t *process_to_run = NULL;
 
     int num_cycles = 0;
     int simulation_time = 0;
@@ -72,7 +73,6 @@ int main(int argc, char *argv[]) {
         // printf("Simualation time: %d\n", simulation_time);
 
         // Add processes to input queue if their arrival time is less than or equal to the current simulation time
-        
         // print_queue(processes_from_file);
         node_t *node = processes_from_file->front;
         
@@ -137,7 +137,9 @@ int main(int argc, char *argv[]) {
         // printf("ready queue size: %d\n", ready_queue->size);
         // printf("proc_remaining: %d\n", num_proc_left);
 
-        // Process has finished running
+        process_to_run = schedule_process(ready_queue, scheduler, current_process);
+
+        // Current process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
             free_process_memory(memory, current_process);
@@ -149,12 +151,13 @@ int main(int argc, char *argv[]) {
                 max_time_overhead = process_time_overhead;
             }
         } 
-        else if (current_process){
-            printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, current_process->process_name, current_process->service_time - current_process->run_time);
+        // Process to be run is just starting or resuming (thus different to current process)
+        else if (process_to_run!=current_process){
+            printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
         }
 
         // Schedule next process to run
-        current_process = schedule_process(ready_queue, scheduler, current_process);
+        current_process = process_to_run; //schedule_process(ready_queue, scheduler, current_process);
         if (current_process!=NULL){
             current_process->state = RUNNING;
             current_process->run_time += quantum;
