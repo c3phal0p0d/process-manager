@@ -57,6 +57,32 @@ process_t *dequeue(queue_t *queue){
     return front->process;
 }
 
+int remove_from_queue(queue_t *queue, process_t *process){
+    node_t *node = queue->front;
+    node_t *prev_node = NULL;
+    for (int i=0; i<queue->size; i++){
+        if (node->process==process){
+            if (prev_node==NULL){   // front of queue
+                queue->front = node->next;
+            }
+            else if (node->next==NULL){
+                prev_node->next = NULL;
+                queue->rear = prev_node;
+            }
+            else {
+                prev_node->next = node->next->next;
+            }
+            free(node);
+            queue->size--;
+            return 0;
+        }
+        prev_node = node;
+        node = node->next;
+    }
+
+    return -1;  // process not found in queue
+}
+
 void print_queue(queue_t *queue){
     if (is_empty(queue)){
         printf("NULL\n");

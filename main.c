@@ -44,17 +44,36 @@ int main(int argc, char *argv[]) {
 
     int num_cycles = 0;
     int simulation_time = 0;
+    int num_proc_left = -1;
     queue_t *input_queue = initialize_queue();
     queue_t *ready_queue = initialize_queue();
     process_t *current_process = NULL;
+    int process_manager_started = 0;
 
     // Run process manager until there are no more processes in the input queue and no READY or RUNNING processes.
-    while (!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL)){
+    while ((!process_manager_started||!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL))){
+        process_manager_started = 1;
+        // printf("Cycle %d\n", num_cycles);
+        
+        // printf("*** CYCLE INFO ***\n");
+        // printf("Cycle: %d\n", num_cycles);
+        // printf("Simualation time: %d\n", simulation_time);
+
         // Add processes to input queue if their arrival time is less than or equal to the current simulation time
-        input_queue = initialize_queue();
+        
+        // print_queue(processes_from_file);
         node_t *node = processes_from_file->front;
-        while (node!=NULL && node->process->time_arrived<=simulation_time){
-            enqueue(input_queue, node->process);
+        
+        // printf("Process: ");
+        // print_process(node->process);
+
+        while (node!=NULL){
+            // printf("time arrived: %d\n", node->process->time_arrived);
+
+            if (node->process->time_arrived<=simulation_time && node->process->time_arrived>(simulation_time - quantum)){
+                enqueue(input_queue, node->process);
+            }
+
             node = node->next;
         }
 
@@ -62,32 +81,51 @@ int main(int argc, char *argv[]) {
         // print_queue(input_queue);
 
         // Allocate memory to processes and add them to the ready queue
-        ready_queue = initialize_queue();
         node = input_queue->front;
+
+        // printf("input queue size: %d\n", input_queue->size);
+
         for (int i=0; i<input_queue->size; i++){
-            if (memory_strategy=="best-fit"){
-                allocate_memory(node->process);
-                printf("%d,READY,process_name=%s,assigned_at=%d\n", simulation_time, node->process->process_name, simulation_time);
-            }
-            node->process->state = READY;
-            enqueue(ready_queue, node->process);
-            node = node->next;
+            // Prevent adding processes that are already in the queue or have been in the past
+            if ((node->process->time_arrived<=simulation_time && node->process->time_arrived>simulation_time-quantum)){
+                if (strcmp(memory_strategy, "best-fit")==0){
+                    allocate_memory(node->process);
+                    printf("%d,READY,process_name=%s,assigned_at=%d\n", simulation_time, node->process->process_name, simulation_time);
+                }
+
+                node->process->state = READY;
+                enqueue(ready_queue, node->process);
+                remove_from_queue(input_queue, node->process);
+
+                if (node->next==NULL){
+                    break;
+                }
+                node = node->next;
+
+                // printf("Process: ");
+                // print_process(node->process);
+                }
         }
 
         // printf("*** Ready queue ***\n");
         // print_queue(ready_queue);
 
-        // Schedule process
-        current_process = schedule_process(ready_queue, scheduler, current_process);
-        current_process->state = RUNNING;
+        num_proc_left = input_queue->size + ready_queue->size;
+        // printf("input queue size: %d\n", input_queue->size);
+        // printf("ready queue size: %d\n", ready_queue->size);
+        // printf("proc_remaining: %d\n", num_proc_left);
 
         // Process has finished running
-        if (current_process->run_time >= current_process->service_time){
-            printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, input_queue->size + ready_queue->size);
+        if (current_process && current_process->run_time >= current_process->service_time){
+            printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
         } 
-        else {
+        else if (current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, current_process->process_name, current_process->service_time - current_process->run_time);
         }
+
+        // Schedule next process to run
+        current_process = schedule_process(ready_queue, scheduler, current_process);
+        current_process->state = RUNNING;
 
         simulation_time += quantum;
         num_cycles++;

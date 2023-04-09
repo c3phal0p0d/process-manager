@@ -25,9 +25,10 @@ void print_process(process_t *process){
 
 process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *current_process){
     process_t* process_to_run = NULL;
+    // printf("scheduling process\n");
 
     // Schedule process according to the Shortest Job First algorithm
-    if (scheduler=="SJF"){
+    if (strcmp(scheduler, "SJF")==0){
         // If cuurrent process has not yet finished, it will continue to run
         if (current_process!=NULL && current_process->service_time > current_process->run_time){
             process_to_run = current_process;
@@ -43,22 +44,25 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
 
         // Iterate through queue to find process with shortest service time
         node_t *node = ready_queue->front;
+        print_process(node->process);
         for (int i=0; i<ready_queue->size; i++){
             if (shortest_service_time==-1){ 
                 shortest_service_time = node->process->service_time;
+                // printf("shortest service time: %d\n", shortest_service_time);
+                process_to_run = node->process;
             }
             else if (node->process->service_time<shortest_service_time){
                 // TODO: add checks for breaking ties - shortest arrival time, then lastly lexicographical order
                 node->process->state = RUNNING;
                 process_to_run = node->process;
-                // remove from ready queue?
+                remove_from_queue(ready_queue, node->process);
             }
         }
         
     } 
 
     // Schedule process according to the Round Robin algorithm
-    else if (scheduler=="RR"){
+    else if (strcmp(scheduler, "RR")==0){
         // If current process has finished running
         if (current_process!=NULL && current_process->service_time <= current_process->run_time){
             current_process->state = FINISHED;
@@ -73,6 +77,8 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         process_to_run = dequeue(ready_queue);
         process_to_run->state = RUNNING;
     }
+
+    // print_process(process_to_run);
 
     return process_to_run;
 }
