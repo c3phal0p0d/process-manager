@@ -11,6 +11,7 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
     process->service_time = service_time;
     process->run_time = 0;
     process->memory_requirement = memory_requirement;
+    process->memory_address = -1;
     process->state = NONE;
 
     return process;
@@ -90,6 +91,70 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
     return process_to_run;
 }
 
-int allocate_memory(process_t *process){
-    return 0;
+int allocate_process_memory(int *memory, process_t *process){
+    //printf("allocating process memory\n");
+    // Determine best fit hole in memory
+    int hole_size = 0;
+    int best_fit_hole_size = -1;
+    int memory_address = 0;
+    int best_fit_memory_address = -1;
+    for (int i=0; i<2048; i++){
+        // Memory segment is free
+        if (memory[i]==0 && i<2047){
+            //printf("hole size: %d\n", hole_size);
+            // Start of a new hole in memory
+            if (hole_size==0){
+                memory_address = i;
+                hole_size = 1;
+            }
+            // Continuation of a hole in memory
+            else if (hole_size>0){
+                hole_size++;
+            }
+        }
+        // Memory segment is occupied
+        else if (memory[i]==1){
+            // Found better fit
+            if (best_fit_hole_size==-1 || (hole_size<best_fit_hole_size && hole_size>process->memory_requirement)){
+                //printf("found better fit\n");
+                best_fit_hole_size = hole_size;
+                best_fit_memory_address = memory_address;
+            }
+            hole_size = 0;
+        }
+        // Reached end of memory
+        else if (i==2047){
+            // printf("%d\n", i);
+            // printf("memory address: %d\n", memory_address);
+            hole_size++;
+            if (best_fit_hole_size==-1 || (hole_size<best_fit_hole_size && hole_size>process->memory_requirement)){
+                //printf("found better fit\n");
+                best_fit_hole_size = hole_size;
+                best_fit_memory_address = memory_address;
+            }
+            hole_size = 0;
+        }
+    }
+
+    // Allocate memory when best fit has been found
+    if (best_fit_memory_address!=-1){
+        for (int i=best_fit_memory_address; i<best_fit_memory_address+process->memory_requirement; i++){
+            memory[i] = 1;
+        }
+        process->memory_address = best_fit_memory_address;
+        return best_fit_memory_address;
+    }
+
+    // Memory could not be allocated to process
+    return -1;
+}
+
+void free_process_memory(int *memory, process_t *process){
+    //printf("freeing process memory\n");
+    if (process->memory_address==-1){
+        return;
+    }
+    for (int i=process->memory_address; i<process->memory_address+process->memory_requirement; i++){
+        memory[i] = 0;
+    }
 }

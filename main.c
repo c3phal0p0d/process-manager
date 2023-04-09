@@ -43,18 +43,23 @@ int main(int argc, char *argv[]) {
     // printf("*** Processes from file ***\n");
     // print_queue(processes_from_file);
 
+    int memory[2048] = {0};
+
+    queue_t *input_queue = initialize_queue();
+    queue_t *ready_queue = initialize_queue();
+    process_t *current_process = NULL;
+
     int num_cycles = 0;
     int simulation_time = 0;
+    int num_processes  = processes_from_file->size;
+    int num_proc_left = -1;
+
     int total_execution_time = 0;
     double process_turnaround_time = 0;
     double process_time_overhead = 0;
     double total_time_overhead = 0;
     double max_time_overhead = -1;
-    int num_processes  = processes_from_file->size;
-    int num_proc_left = -1;
-    queue_t *input_queue = initialize_queue();
-    queue_t *ready_queue = initialize_queue();
-    process_t *current_process = NULL;
+
     int process_manager_started = 0;
 
     // Run process manager until there are no more processes in the input queue and no READY or RUNNING processes.
@@ -92,26 +97,36 @@ int main(int argc, char *argv[]) {
 
         // printf("input queue size: %d\n", input_queue->size);
 
+        int allocated_memory_address;
         for (int i=0; i<input_queue->size; i++){
             // Prevent adding processes that are already in the queue or have been in the past
             if ((node->process->time_arrived<=simulation_time && node->process->time_arrived>simulation_time-quantum)){
                 if (strcmp(memory_strategy, "best-fit")==0){
-                    allocate_memory(node->process);
-                    printf("%d,READY,process_name=%s,assigned_at=%d\n", simulation_time, node->process->process_name, simulation_time);
-                }
+                    allocated_memory_address = allocate_process_memory(memory, node->process);
+                    //printf("memory address: %d\n", allocated_memory_address);
 
-                node->process->state = READY;
-                enqueue(ready_queue, node->process);
-                remove_from_queue(input_queue, node->process);
-
-                if (node->next==NULL){
-                    break;
+                    // If memory was successfully allocated to process, its state becomes READY
+                    if (allocated_memory_address!=-1){
+                        printf("%d,READY,process_name=%s,assigned_at=%d\n", simulation_time, node->process->process_name, allocated_memory_address);
+                        node->process->state = READY;
+                        enqueue(ready_queue, node->process);
+                        remove_from_queue(input_queue, node->process);
+                    }
                 }
-                node = node->next;
+                else {
+                    node->process->state = READY;
+                    enqueue(ready_queue, node->process);
+                    remove_from_queue(input_queue, node->process);
 
-                // printf("Process: ");
-                // print_process(node->process);
+                    if (node->next==NULL){
+                        break;
+                    }
+                    node = node->next;
+
+                    // printf("Process: ");
+                    // print_process(node->process);
                 }
+            }
         }
 
         // printf("*** Ready queue ***\n");
@@ -125,6 +140,7 @@ int main(int argc, char *argv[]) {
         // Process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
+            free_process_memory(memory, current_process);
             process_turnaround_time = simulation_time-current_process->time_arrived;
             total_execution_time += process_turnaround_time;
             process_time_overhead = process_turnaround_time/current_process->service_time;
