@@ -17,6 +17,10 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
 }
 
 void print_process(process_t *process){
+    if (process==NULL){
+        printf("NULL\n");
+        return;
+    }
     printf("%d ", process->time_arrived);
     printf("%s ", process->process_name);
     printf("%d ", process->service_time);
@@ -25,11 +29,10 @@ void print_process(process_t *process){
 
 process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *current_process){
     process_t* process_to_run = NULL;
-    // printf("scheduling process\n");
 
     // Schedule process according to the Shortest Job First algorithm
     if (strcmp(scheduler, "SJF")==0){
-        // If cuurrent process has not yet finished, it will continue to run
+        // If current process has not yet finished, it will continue to run
         if (current_process!=NULL && current_process->service_time > current_process->run_time){
             process_to_run = current_process;
             return process_to_run;
@@ -68,21 +71,24 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
             current_process->state = FINISHED;
         }
 
-        // If current process has not finished running
+        // If current process has not finished running, it should stop running and be placed at end of ready queue
         if (current_process!=NULL && current_process->service_time > current_process->run_time){
             current_process->state = READY;
             enqueue(ready_queue, current_process);
         }
 
         process_to_run = dequeue(ready_queue);
-        process_to_run->state = RUNNING;
+
+        if (process_to_run!=NULL){
+            process_to_run->state = RUNNING;
+        }
     }
 
+    // printf("process: ");
     // print_process(process_to_run);
 
     return process_to_run;
 }
-
 
 int allocate_memory(process_t *process){
     return 0;

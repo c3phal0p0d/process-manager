@@ -125,11 +125,16 @@ int main(int argc, char *argv[]) {
 
         // Schedule next process to run
         current_process = schedule_process(ready_queue, scheduler, current_process);
-        current_process->state = RUNNING;
+        if (current_process!=NULL){
+            current_process->state = RUNNING;
+            current_process->run_time += quantum;
+        }
+
+        // printf("process: ");
+        // print_process(current_process);
 
         simulation_time += quantum;
         num_cycles++;
-        current_process->run_time += quantum;
     }
 
     return 0;
