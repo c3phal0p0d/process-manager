@@ -111,6 +111,11 @@ int main(int argc, char *argv[]) {
                         node->process->state = READY;
                         enqueue(ready_queue, node->process);
                         remove_from_queue(input_queue, node->process);
+
+                        if (node->next==NULL){
+                            break;
+                        }
+                        node = node->next;
                     }
                 }
                 else {

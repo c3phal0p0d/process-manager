@@ -104,6 +104,7 @@ int allocate_process_memory(int *memory, process_t *process){
             //printf("hole size: %d\n", hole_size);
             // Start of a new hole in memory
             if (hole_size==0){
+                // printf("hole size: 0, i: %d\n", i);
                 memory_address = i;
                 hole_size = 1;
             }
@@ -114,9 +115,10 @@ int allocate_process_memory(int *memory, process_t *process){
         }
         // Memory segment is occupied
         else if (memory[i]==1){
+            //printf("i: %d\n", i);
             // Found better fit
-            if (best_fit_hole_size==-1 || (hole_size<best_fit_hole_size && hole_size>process->memory_requirement)){
-                //printf("found better fit\n");
+            if (hole_size>0 && (best_fit_hole_size==-1 || (hole_size<best_fit_hole_size && hole_size>process->memory_requirement))){
+                // printf("found better fit starting at i: %d\n", i);
                 best_fit_hole_size = hole_size;
                 best_fit_memory_address = memory_address;
             }
@@ -124,13 +126,13 @@ int allocate_process_memory(int *memory, process_t *process){
         }
         // Reached end of memory
         else if (i==2047){
-            // printf("%d\n", i);
-            // printf("memory address: %d\n", memory_address);
             hole_size++;
             if (best_fit_hole_size==-1 || (hole_size<best_fit_hole_size && hole_size>process->memory_requirement)){
-                //printf("found better fit\n");
+                // printf("found better fit\n");
+                // printf("memory address: %d\n", memory_address);
                 best_fit_hole_size = hole_size;
                 best_fit_memory_address = memory_address;
+                // printf("best fit memory addr: %d\n", best_fit_memory_address);
             }
             hole_size = 0;
         }
@@ -142,6 +144,7 @@ int allocate_process_memory(int *memory, process_t *process){
             memory[i] = 1;
         }
         process->memory_address = best_fit_memory_address;
+        //printf("process memory address: %d\n", process->memory_address);
         return best_fit_memory_address;
     }
 
@@ -157,4 +160,5 @@ void free_process_memory(int *memory, process_t *process){
     for (int i=process->memory_address; i<process->memory_address+process->memory_requirement; i++){
         memory[i] = 0;
     }
+    //printf("freed\n");
 }
