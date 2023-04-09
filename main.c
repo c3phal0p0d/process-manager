@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 #include "utils.h"
 #include "process_manager.h"
 #include "queue.h"
@@ -44,6 +45,12 @@ int main(int argc, char *argv[]) {
 
     int num_cycles = 0;
     int simulation_time = 0;
+    int total_execution_time = 0;
+    double process_turnaround_time = 0;
+    double process_time_overhead = 0;
+    double total_time_overhead = 0;
+    double max_time_overhead = -1;
+    int num_processes  = processes_from_file->size;
     int num_proc_left = -1;
     queue_t *input_queue = initialize_queue();
     queue_t *ready_queue = initialize_queue();
@@ -118,6 +125,13 @@ int main(int argc, char *argv[]) {
         // Process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
+            process_turnaround_time = simulation_time-current_process->time_arrived;
+            total_execution_time += process_turnaround_time;
+            process_time_overhead = process_turnaround_time/current_process->service_time;
+            total_time_overhead += process_time_overhead;
+            if (max_time_overhead==-1 || (process_time_overhead > max_time_overhead)){
+                max_time_overhead = process_time_overhead;
+            }
         } 
         else if (current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, current_process->process_name, current_process->service_time - current_process->run_time);
@@ -128,14 +142,27 @@ int main(int argc, char *argv[]) {
         if (current_process!=NULL){
             current_process->state = RUNNING;
             current_process->run_time += quantum;
-        }
 
+            simulation_time += quantum;
+            num_cycles++;
+        }
+        
         // printf("process: ");
         // print_process(current_process);
-
-        simulation_time += quantum;
-        num_cycles++;
     }
+
+    int turnaround_time = ceil((double)total_execution_time/num_processes);
+    double avg_time_overhead = total_time_overhead/num_processes;
+
+    // Print performance statistics
+    printf("Turnaround time %d\n", turnaround_time);
+    printf("Time overhead %.2f %.2f\n", max_time_overhead, avg_time_overhead);
+    printf("Makespan %d\n", simulation_time);
+
+    // Cleanup
+    free(processes_from_file);
+    free(input_queue);
+    free(ready_queue);
 
     return 0;
 }
