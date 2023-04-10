@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
             }
         } 
         // Process to be run is just starting or resuming (thus different to current process)
-        else if (process_to_run!=current_process){
+        if (process_to_run!=NULL&&process_to_run!=current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
         }
 
