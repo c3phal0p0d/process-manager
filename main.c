@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
     // Read processes from file
     queue_t *processes_from_file = initialize_queue();
     read_file(filename, processes_from_file);
+    int num_proc_from_file_left = processes_from_file->size;
 
     // printf("*** Processes from file ***\n");
     // print_queue(processes_from_file);
@@ -64,7 +65,8 @@ int main(int argc, char *argv[]) {
     int process_manager_started = 0;
 
     // Run process manager until there are no more processes in the input queue and no READY or RUNNING processes.
-    while ((!process_manager_started||!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL))){
+    while ((!process_manager_started||num_proc_from_file_left>0||!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL))){   // !(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL)
+        //printf("%d\n", num_proc_from_file_left);
         process_manager_started = 1;
         // printf("Cycle %d\n", num_cycles);
         
@@ -82,8 +84,13 @@ int main(int argc, char *argv[]) {
         while (node!=NULL){
             // printf("time arrived: %d\n", node->process->time_arrived);
 
-            if (node->process->time_arrived<=simulation_time && node->process->time_arrived>(simulation_time - quantum)){
+            if ((node->process->time_arrived<=simulation_time)){// && node->process->time_arrived>(simulation_time - quantum)){
                 enqueue(input_queue, node->process);
+                dequeue(processes_from_file);
+                // print_process(node->process);
+                num_proc_from_file_left--;
+                // printf("processes file queue:\n");
+                // print_queue(processes_from_file);
             }
 
             node = node->next;
@@ -174,10 +181,10 @@ int main(int argc, char *argv[]) {
         if (current_process!=NULL){
             current_process->state = RUNNING;
             current_process->run_time += quantum;
-
-            simulation_time += quantum;
-            num_cycles++;
         }
+
+        simulation_time += quantum;
+        num_cycles++;
 
         // printf("process: ");
         // print_process(current_process);
@@ -189,7 +196,7 @@ int main(int argc, char *argv[]) {
     // Print performance statistics
     printf("Turnaround time %d\n", turnaround_time);
     printf("Time overhead %.2f %.2f\n", max_time_overhead, avg_time_overhead);
-    printf("Makespan %d\n", simulation_time);
+    printf("Makespan %d\n", simulation_time-quantum);
 
     // Cleanup
     free(processes_from_file);
