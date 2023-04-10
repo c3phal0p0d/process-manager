@@ -141,12 +141,12 @@ int main(int argc, char *argv[]) {
         //     print_queue(ready_queue);
         // }
 
-        num_proc_left = input_queue->size + ready_queue->size;
         // printf("input queue size: %d\n", input_queue->size);
         // printf("ready queue size: %d\n", ready_queue->size);
         // printf("proc_remaining: %d\n", num_proc_left);
 
         process_to_run = schedule_process(ready_queue, scheduler, current_process);
+        num_proc_left = input_queue->size + ready_queue->size;
         // print_process(process_to_run);
 
         // Current process has finished running
