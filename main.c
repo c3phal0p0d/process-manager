@@ -96,6 +96,8 @@ int main(int argc, char *argv[]) {
 
         // printf("input queue size: %d\n", input_queue->size);
 
+        //num_proc_left = input_queue->size + ready_queue->size;
+
         // Current process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
@@ -153,14 +155,14 @@ int main(int argc, char *argv[]) {
         //     print_queue(ready_queue);
         // }
 
-        num_proc_left = input_queue->size + ready_queue->size;
+        // num_proc_left = input_queue->size + ready_queue->size;
         // printf("input queue size: %d\n", input_queue->size);
         // printf("ready queue size: %d\n", ready_queue->size);
         // printf("proc_remaining: %d\n", num_proc_left);
 
         process_to_run = schedule_process(ready_queue, scheduler, current_process);
         // print_process(process_to_run);
-
+        num_proc_left = input_queue->size + ready_queue->size;
         
         // Process to be run is just starting or resuming (thus different to current process)
         if (process_to_run!=NULL&&process_to_run!=current_process){
