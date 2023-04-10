@@ -72,7 +72,6 @@ int remove_from_queue(queue_t *queue, process_t *process){
             else {
                 prev_node->next = node->next->next;
             }
-            free(node);
             queue->size--;
             return 0;
         }

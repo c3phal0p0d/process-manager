@@ -48,21 +48,22 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
 
         // Iterate through queue to find process with shortest service time
         node_t *node = ready_queue->front;
-        print_process(node->process);
         for (int i=0; i<ready_queue->size; i++){
-            if (shortest_service_time==-1){ 
-                shortest_service_time = node->process->service_time;
-                // printf("shortest service time: %d\n", shortest_service_time);
-                process_to_run = node->process;
-            }
-            else if (node->process->service_time<shortest_service_time){
+            if (shortest_service_time==-1 || node->process->service_time<shortest_service_time){
                 // TODO: add checks for breaking ties - shortest arrival time, then lastly lexicographical order
                 node->process->state = RUNNING;
                 process_to_run = node->process;
+                // printf("process to remove: ");
+                // print_process(node->process);
+                // printf("before:\n");
+                // print_queue(ready_queue);
                 remove_from_queue(ready_queue, node->process);
+                // printf("after:\n");
+                // print_queue(ready_queue);
+                // printf("removed\n");
             }
         }
-        
+        // printf("shortest service time: %d\n", shortest_service_time);
     } 
 
     // Schedule process according to the Round Robin algorithm

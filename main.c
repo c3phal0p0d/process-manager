@@ -143,6 +143,7 @@ int main(int argc, char *argv[]) {
         // printf("proc_remaining: %d\n", num_proc_left);
 
         process_to_run = schedule_process(ready_queue, scheduler, current_process);
+        // print_process(process_to_run);
 
         // Current process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
