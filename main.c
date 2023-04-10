@@ -89,8 +89,10 @@ int main(int argc, char *argv[]) {
             node = node->next;
         }
         
-        // printf("*** Input queue ***\n");
-        // print_queue(input_queue);
+        // if (1){
+        //     printf("*** Input queue ***\n");
+        //     print_queue(input_queue);
+        // }
 
         // Allocate memory to processes and add them to the ready queue
         node = input_queue->front;
@@ -100,7 +102,7 @@ int main(int argc, char *argv[]) {
         int allocated_memory_address;
         for (int i=0; i<input_queue->size; i++){
             // Prevent adding processes that are already in the queue or have been in the past
-            if ((node->process->time_arrived<=simulation_time && node->process->time_arrived>simulation_time-quantum)){
+            if ((node->process->time_arrived<=simulation_time && node->process->state==NONE)){
                 if (strcmp(memory_strategy, "best-fit")==0){
                     allocated_memory_address = allocate_process_memory(memory, node->process);
                     //printf("memory address: %d\n", allocated_memory_address);
@@ -134,8 +136,10 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // printf("*** Ready queue ***\n");
-        // print_queue(ready_queue);
+        // if (1){
+        //     printf("*** Ready queue ***\n");
+        //     print_queue(ready_queue);
+        // }
 
         num_proc_left = input_queue->size + ready_queue->size;
         // printf("input queue size: %d\n", input_queue->size);

@@ -30,9 +30,11 @@ void print_process(process_t *process){
 
 process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *current_process){
     process_t* process_to_run = NULL;
+    // printf("scheduling...\n");
 
     // Schedule process according to the Shortest Job First algorithm
     if (strcmp(scheduler, "SJF")==0){
+        // printf("sjf\n");
         // If current process has not yet finished, it will continue to run
         if (current_process!=NULL && current_process->service_time > current_process->run_time){
             process_to_run = current_process;
@@ -47,23 +49,35 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         int shortest_service_time = -1;
 
         // Iterate through queue to find process with shortest service time
+        if (is_empty(ready_queue)){
+            return NULL;
+        }
         node_t *node = ready_queue->front;
         for (int i=0; i<ready_queue->size; i++){
+            // printf("iterating: \n");
+            // print_process(node->process);
             if (shortest_service_time==-1 || node->process->service_time<shortest_service_time){
                 // TODO: add checks for breaking ties - shortest arrival time, then lastly lexicographical order
-                node->process->state = RUNNING;
+                // printf("found shorter\n");
                 process_to_run = node->process;
+                shortest_service_time = node->process->service_time;
                 // printf("process to remove: ");
                 // print_process(node->process);
                 // printf("before:\n");
                 // print_queue(ready_queue);
-                remove_from_queue(ready_queue, node->process);
                 // printf("after:\n");
                 // print_queue(ready_queue);
                 // printf("removed\n");
             }
+            if (node->next==NULL){
+                break;
+            }
+            node = node->next;
         }
+        process_to_run->state = RUNNING;
+        remove_from_queue(ready_queue, process_to_run);
         // printf("shortest service time: %d\n", shortest_service_time);
+        // print_process(process_to_run);
     } 
 
     // Schedule process according to the Round Robin algorithm
