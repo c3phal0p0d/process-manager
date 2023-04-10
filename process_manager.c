@@ -43,6 +43,7 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
 
         // If current process has finished running
         if (current_process!=NULL && current_process->service_time <= current_process->run_time){
+            // printf("finished\n");
             current_process->state = FINISHED;
         }
 
@@ -74,10 +75,11 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
             }
             node = node->next;
         }
+        // printf("process to run:\n");
+        // print_process(process_to_run);
         process_to_run->state = RUNNING;
         remove_from_queue(ready_queue, process_to_run);
         // printf("shortest service time: %d\n", shortest_service_time);
-        // print_process(process_to_run);
     } 
 
     // Schedule process according to the Round Robin algorithm

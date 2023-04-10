@@ -96,10 +96,6 @@ int main(int argc, char *argv[]) {
             node = node->next;
         }
         
-        // if (1){
-        //     printf("*** Input queue ***\n");
-        //     print_queue(input_queue);
-        // }
 
         // printf("input queue size: %d\n", input_queue->size);
 
@@ -157,7 +153,17 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // if (1){
+        // if (simulation_time>10 && simulation_time<40){
+        //     printf("Simulation time: %d\n", simulation_time);
+        //     printf("*** Processes from file ***\n");
+        //     print_queue(processes_from_file);
+        //     printf("*** Input queue ***\n");
+        //     print_queue(input_queue);
+        //     printf("*** Ready queue ***\n");
+        //     print_queue(ready_queue);
+        // }
+
+        // if (simulation_time==174){
         //     printf("*** Ready queue ***\n");
         //     print_queue(ready_queue);
         // }

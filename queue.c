@@ -58,6 +58,8 @@ process_t *dequeue(queue_t *queue){
 }
 
 int remove_from_queue(queue_t *queue, process_t *process){
+    // printf("removing from queue: ");
+    // print_process(process);
     node_t *node = queue->front;
     node_t *prev_node = NULL;
     for (int i=0; i<queue->size; i++){
@@ -70,7 +72,7 @@ int remove_from_queue(queue_t *queue, process_t *process){
                 queue->rear = prev_node;
             }
             else {
-                prev_node->next = node->next->next;
+                prev_node->next = node->next;
             }
             queue->size--;
             return 0;
