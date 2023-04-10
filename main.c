@@ -94,12 +94,24 @@ int main(int argc, char *argv[]) {
         //     print_queue(input_queue);
         // }
 
-        // Allocate memory to processes and add them to the ready queue
-        node = input_queue->front;
-
         // printf("input queue size: %d\n", input_queue->size);
 
+        // Current process has finished running
+        if (current_process && current_process->run_time >= current_process->service_time){
+            printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
+            free_process_memory(memory, current_process);
+            process_turnaround_time = simulation_time-current_process->time_arrived;
+            total_execution_time += process_turnaround_time;
+            process_time_overhead = process_turnaround_time/current_process->service_time;
+            total_time_overhead += process_time_overhead;
+            if (max_time_overhead==-1 || (process_time_overhead > max_time_overhead)){
+                max_time_overhead = process_time_overhead;
+            }
+        } 
+
+        // Allocate memory to processes and add them to the ready queue
         int allocated_memory_address;
+        node = input_queue->front;
         for (int i=0; i<input_queue->size; i++){
             // Prevent adding processes that are already in the queue or have been in the past
             if ((node->process->time_arrived<=simulation_time && node->process->state==NONE)){
@@ -149,18 +161,7 @@ int main(int argc, char *argv[]) {
         process_to_run = schedule_process(ready_queue, scheduler, current_process);
         // print_process(process_to_run);
 
-        // Current process has finished running
-        if (current_process && current_process->run_time >= current_process->service_time){
-            printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
-            free_process_memory(memory, current_process);
-            process_turnaround_time = simulation_time-current_process->time_arrived;
-            total_execution_time += process_turnaround_time;
-            process_time_overhead = process_turnaround_time/current_process->service_time;
-            total_time_overhead += process_time_overhead;
-            if (max_time_overhead==-1 || (process_time_overhead > max_time_overhead)){
-                max_time_overhead = process_time_overhead;
-            }
-        } 
+        
         // Process to be run is just starting or resuming (thus different to current process)
         if (process_to_run!=NULL&&process_to_run!=current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
