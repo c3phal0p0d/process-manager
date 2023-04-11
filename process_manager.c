@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include "process_manager.h"
 #include "queue.h"
 
@@ -13,19 +15,23 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
     process->memory_requirement = memory_requirement;
     process->memory_address = -1;
     process->state = NONE;
+    process->pid = -1;
 
     return process;
 }
+
 
 void print_process(process_t *process){
     if (process==NULL){
         printf("NULL\n");
         return;
     }
-    printf("%d ", process->time_arrived);
-    printf("%s ", process->process_name);
-    printf("%d ", process->service_time);
-    printf("%d\n", process->memory_requirement);
+    printf("time arrived: %d, ", process->time_arrived);
+    printf("process name: %s, ", process->process_name);
+    printf("service time: %d, ", process->service_time);
+    printf("memory_requirement: %d, ", process->memory_requirement);
+    printf("memory address: %d, ", process->memory_address);
+    printf("pid: %d, ", process->pid);
 }
 
 process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *current_process){
@@ -178,4 +184,50 @@ void free_process_memory(int *memory, process_t *process){
         memory[i] = 0;
     }
     //printf("freed\n");
+}
+
+
+//
+// Functions for controlling real processes, used in task 4
+//
+void run_process(process_t *process, int simulation_time){
+    // Creating a real instance of the process
+    pid_t root_pid = getpid();
+    pid_t process_pid;
+    if ((process_pid = fork()) == -1){
+        perror("fork error");
+        exit(1);
+    }
+
+    process->pid = process_pid;
+    
+    if (getpid()!=root_pid){
+        char *args[] = {process->process_name};
+        execv("./process", args);
+
+        // communicate with process using pipe
+            // send 32 bit simulation time of when process is started to standard input of process
+            // read 1 byte from standard ouput of process and evry it is the same as the last one sent
+    }
+}
+
+void suspend_process(pid_t pid, int simulation_time){
+    // communicate with process using pipe
+        // send 32 bit simulation time of when process is suspended to standard input of process
+        // send SIGSTP signal to process
+}
+
+void resume_process(pid_t pid, int simulation_time){
+    // communicate with process using pipe
+        // send 32 bit simulation time of when process is resumed to standard input of process
+        // send SIGCONT signal to process
+        // read 1 byte from standard output of process and verify it is the same as the last one sent
+}
+
+char* terminate_process(pid_t pid, int simulation_time){
+    char sha256[64];
+    // communicate with process using pipe
+        // send 32 bit simulation time of when process is finished to standard input of process
+        // send SIGTERM signal to process
+        // read 64 byte string from output of process and include in execution transcript
 }

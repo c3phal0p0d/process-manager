@@ -96,7 +96,6 @@ int main(int argc, char *argv[]) {
             node = node->next;
         }
         
-
         // printf("input queue size: %d\n", input_queue->size);
 
         //num_proc_left = input_queue->size + ready_queue->size;
@@ -104,7 +103,15 @@ int main(int argc, char *argv[]) {
         // Current process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
+            
+            // Terminate real process
+            char* sha256 = terminate_process(current_process->pid, simulation_time);
+            printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
+
+            // Free process memory
             free_process_memory(memory, current_process);
+            
+            // Calculate performance statistics for process
             process_turnaround_time = simulation_time-current_process->time_arrived;
             total_execution_time += process_turnaround_time;
             process_time_overhead = process_turnaround_time/current_process->service_time;
@@ -180,6 +187,20 @@ int main(int argc, char *argv[]) {
         // Process to be run is just starting or resuming (thus different to current process)
         if (process_to_run!=NULL&&process_to_run!=current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
+            
+            // Suspend current process
+            suspend_process(current_process->pid, simulation_time);
+
+            // Different methods to control real process about to run, depending on whether it is starting or resuming
+            // If process is just starting and does not yet have a pid
+            if (process_to_run->pid==-1){
+                run_process(process_to_run, simulation_time);
+            }
+            // If resuming
+            else {
+                resume_process(process_to_run->pid, simulation_time);
+            }
+            
         }
 
         // Schedule next process to run
