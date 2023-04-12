@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <signal.h>
 #include "process_manager.h"
 #include "queue.h"
 
@@ -186,48 +187,94 @@ void free_process_memory(int *memory, process_t *process){
     //printf("freed\n");
 }
 
-
 //
 // Functions for controlling real processes, used in task 4
 //
 void run_process(process_t *process, int simulation_time){
-    // Creating a real instance of the process
+    // Set up pipes for two-way communication
+    int fd1[2], fd2[2];
+    char read_message[20];
+    pipe(fd1);
+    pipe(fd2);
+
+    // Fork child process
     pid_t root_pid = getpid();
     pid_t process_pid;
     if ((process_pid = fork()) == -1){
-        perror("fork error");
+        perror("fork error\n");
         exit(1);
     }
-
-    process->pid = process_pid;
     
+    // Child process
     if (getpid()!=root_pid){
-        char *args[] = {process->process_name};
-        execv("./process", args);
+        // printf("in child process, pid: %d\n", getpid());
 
-        // communicate with process using pipe
-            // send 32 bit simulation time of when process is started to standard input of process
-            // read 1 byte from standard ouput of process and evry it is the same as the last one sent
+        close(fd1[0]);                  // close pipe1 read side
+        dup2(fd1[1], STDOUT_FILENO);    // redirect stdout
+        close(fd2[1]);                  // close pipe2 write side
+        dup2(fd2[0], STDIN_FILENO);     // redirect stdin
+
+        // Create instance of process
+        char *args[] = {"-v", process->process_name, NULL};
+        if (execvp("./process", args)==-1){
+            perror("exec error\n");
+            exit(1);
+        }
+
+    }
+    // Parent process
+    else {
+        // printf("in parent process, pid: %d\n", getpid());
+
+        close(fd1[1]);                  // close pipe1 write side
+        dup2(fd1[0], STDIN_FILENO);     // redirect stdin
+        close(fd2[0]);                  // close pipe2 read side
+        dup2(fd2[1], STDOUT_FILENO);    // redirect stdout
+
+        // Send communications through pipes
+        // printf("in parent, writing to pipe message: %s\n", write_messages[0]);
+        // write(fd2[1], write_messages[0], sizeof(write_messages[0]));
+        // read(fd1[0], read_message, sizeof(read_message));
+        // printf("in parent, reading pipe message: %s\n", read_message);
+        // read(fd1[0], read_message, sizeof(read_message));
+        // printf("in parent, reading pipe message: %s\n", read_message);
+
+        // send 32 bit simulation time of when process is started to standard input of process
+        // read 1 byte from standard ouput of process and evry it is the same as the last one sent
+
     }
 }
 
-void suspend_process(pid_t pid, int simulation_time){
-    // communicate with process using pipe
-        // send 32 bit simulation time of when process is suspended to standard input of process
-        // send SIGSTP signal to process
+void suspend_process(process_t *process, int simulation_time){
+    // Send 32 bit simulation time of when process is suspended to standard input of process
+    
+    // Send SIGSTP signal to process
+    kill(process->pid, SIGTSTP);
+
+    int wstatus;
+    pid_t w = waitpid(process->pid, &wstatus, WUNTRACED); 
+    if (WIFSTOPPED(wstatus)) {
+        return;
+    }
 }
 
-void resume_process(pid_t pid, int simulation_time){
-    // communicate with process using pipe
-        // send 32 bit simulation time of when process is resumed to standard input of process
-        // send SIGCONT signal to process
-        // read 1 byte from standard output of process and verify it is the same as the last one sent
+void resume_process(process_t *process, int simulation_time){
+    // Send 32 bit simulation time of when process is resumed to standard input of process
+
+    // Send SIGCONT signal to process
+    kill(process->pid, SIGCONT);
+
+    // Read 1 byte from standard output of process and verify it is the same as the last one sent
 }
 
-char* terminate_process(pid_t pid, int simulation_time){
+char* terminate_process(process_t *process, int simulation_time){
     char sha256[64];
-    // communicate with process using pipe
-        // send 32 bit simulation time of when process is finished to standard input of process
-        // send SIGTERM signal to process
-        // read 64 byte string from output of process and include in execution transcript
+    // Send 32 bit simulation time of when process is finished to standard input of process
+    
+    // Ssend SIGTERM signal to process
+    kill(process->pid, SIGTERM);
+    
+    // Read 64 byte string from output of process and include in execution transcript
+
+    return sha256;
 }

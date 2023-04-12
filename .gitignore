@@ -1,3 +1,5 @@
 .vscode/
 allocate
+process
 *.o
+.DS_Store
