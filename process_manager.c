@@ -64,8 +64,8 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         for (int i=0; i<ready_queue->size; i++){
             // printf("iterating: \n");
             // print_process(node->process);
-            if (shortest_service_time==-1 || node->process->service_time<shortest_service_time){
-                // TODO: add checks for breaking ties - shortest arrival time, then lastly lexicographical order
+            if (shortest_service_time==-1 || node->process->service_time<shortest_service_time || (node->process->service_time==shortest_service_time && node->process->time_arrived<process_to_run->time_arrived)
+                    || (node->process->service_time==shortest_service_time && node->process->time_arrived==process_to_run->time_arrived && strcmp(node->process->process_name, process_to_run->process_name)<0)){
                 // printf("found shorter\n");
                 process_to_run = node->process;
                 shortest_service_time = node->process->service_time;
