@@ -107,7 +107,8 @@ int main(int argc, char *argv[]) {
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
             
             // Terminate real process
-            char sha256[64];
+            char sha256[64+1];
+            sha256[64] = '\0';
             terminate_process(current_process, simulation_time, sha256);
             printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
 
@@ -207,6 +208,10 @@ int main(int argc, char *argv[]) {
                 resume_process(process_to_run, simulation_time);
             }
             
+        }
+        // The same process is continued to run
+        else if (process_to_run!=NULL){
+            resume_process(process_to_run, simulation_time);
         }
 
         // Schedule next process to run
