@@ -30,7 +30,8 @@ int read_file(char *filename, queue_t *input_queue){
         num_processes++;
     }
 
-    return num_processes;
-
     fclose(file_ptr);
+    free(line);
+
+    return num_processes;
 }
