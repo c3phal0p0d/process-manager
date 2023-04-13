@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include "process_manager.h"
 #include "queue.h"
 
@@ -187,13 +188,12 @@ void free_process_memory(int *memory, process_t *process){
     //printf("freed\n");
 }
 
-//
-// Functions for controlling real processes, used in task 4
-//
-void run_process(process_t *process, int simulation_time){
+/************************************************************/
+/* Functions for controlling real processes, used in task 4 */
+/************************************************************/
+int run_process(process_t *process, int simulation_time){
     // Set up pipes for two-way communication
     int fd1[2], fd2[2];
-    char read_message[20];
     pipe(fd1);
     pipe(fd2);
 
@@ -204,6 +204,13 @@ void run_process(process_t *process, int simulation_time){
         perror("fork error\n");
         exit(1);
     }
+
+    process->pid = process_pid;
+    // Store pipe in corresponding process struct so it can be used later to communicate with the same process
+    process->fds[0][0] = fd1[0];
+    process->fds[0][1] = fd1[1];
+    process->fds[1][0] = fd2[0];
+    process->fds[1][1] = fd2[1];
     
     // Child process
     if (getpid()!=root_pid){
@@ -231,6 +238,28 @@ void run_process(process_t *process, int simulation_time){
         close(fd2[0]);                  // close pipe2 read side
         dup2(fd2[1], STDOUT_FILENO);    // redirect stdout
 
+        // Convert simulation time from integer to 4-byte hex reprentation
+        unsigned char hex[4];
+        hex[0] = (simulation_time >> 24) & 0xFF;
+        hex[1] = (simulation_time >> 16) & 0xFF;
+        hex[2] = (simulation_time >> 8) & 0xFF;
+        hex[3] = simulation_time & 0xFF;
+
+        // Send 32 bit simulation time of when process is started to standard input of process
+        printf("simulation time: %d", simulation_time);
+        write(fd2[1], hex, sizeof(hex));
+        // write(fd2[1], hex[0], sizeof(hex[0]));
+        // write(fd2[1], hex[1], sizeof(hex[1]));
+        // write(fd2[1], hex[2], sizeof(hex[2]));
+        // write(fd2[1], hex[3], sizeof(hex[3]));
+
+        // Read 1 byte from standard output of process and verify it is the same as the last byte that was sent
+        char process_output[8];
+        read(fd1[0], process_output, sizeof(process_output));
+        if (process_output[0]==hex[3]){
+            return 0;
+        }
+
         // Send communications through pipes
         // printf("in parent, writing to pipe message: %s\n", write_messages[0]);
         // write(fd2[1], write_messages[0], sizeof(write_messages[0]));
@@ -239,42 +268,91 @@ void run_process(process_t *process, int simulation_time){
         // read(fd1[0], read_message, sizeof(read_message));
         // printf("in parent, reading pipe message: %s\n", read_message);
 
-        // send 32 bit simulation time of when process is started to standard input of process
-        // read 1 byte from standard ouput of process and evry it is the same as the last one sent
+        return -1;
 
     }
+
+    return -1;
 }
 
-void suspend_process(process_t *process, int simulation_time){
+int suspend_process(process_t *process, int simulation_time){
+    int fd1[2], fd2[2];
+    memcpy(fd1, process->fds[0], 2);
+    memcpy(fd2, process->fds[1], 2);
+
+    // Convert simulation time from integer to 4-byte hex reprentation
+    unsigned char hex[4];
+    hex[0] = (simulation_time >> 24) & 0xFF;
+    hex[1] = (simulation_time >> 16) & 0xFF;
+    hex[2] = (simulation_time >> 8) & 0xFF;
+    hex[3] = simulation_time & 0xFF;
+
     // Send 32 bit simulation time of when process is suspended to standard input of process
+    printf("simulation time: %d", simulation_time);
+    write(fd2[1], hex, sizeof(hex));
     
     // Send SIGSTP signal to process
     kill(process->pid, SIGTSTP);
 
     int wstatus;
-    pid_t w = waitpid(process->pid, &wstatus, WUNTRACED); 
+    waitpid(process->pid, &wstatus, WUNTRACED); 
     if (WIFSTOPPED(wstatus)) {
-        return;
+        return 0;
     }
+
+    return -1;
 }
 
-void resume_process(process_t *process, int simulation_time){
+int resume_process(process_t *process, int simulation_time){
+    int fd1[2], fd2[2];
+    memcpy(fd1, process->fds[0], 2);
+    memcpy(fd2, process->fds[1], 2);
+
+    // Convert simulation time from integer to 4-byte hex reprentation
+    unsigned char hex[4];
+    hex[0] = (simulation_time >> 24) & 0xFF;
+    hex[1] = (simulation_time >> 16) & 0xFF;
+    hex[2] = (simulation_time >> 8) & 0xFF;
+    hex[3] = simulation_time & 0xFF;
+    
     // Send 32 bit simulation time of when process is resumed to standard input of process
+    printf("simulation time: %d", simulation_time);
+    write(fd2[1], hex, sizeof(hex));
 
     // Send SIGCONT signal to process
     kill(process->pid, SIGCONT);
 
-    // Read 1 byte from standard output of process and verify it is the same as the last one sent
+    // Read 1 byte from standard output of process and verify it is the same as the last byte that was sent
+    char process_output[8];
+    read(fd1[0], process_output, sizeof(process_output));
+    if (process_output[0]==hex[3]){
+        return 0;
+    }
+
+    return -1;
 }
 
-char* terminate_process(process_t *process, int simulation_time){
-    char sha256[64];
+int terminate_process(process_t *process, int simulation_time, char *sha256){
+    int fd1[2], fd2[2];
+    memcpy(fd1, process->fds[0], 2);
+    memcpy(fd2, process->fds[1], 2);
+
+    // Convert simulation time from integer to 4-byte hex reprentation
+    unsigned char hex[4];
+    hex[0] = (simulation_time >> 24) & 0xFF;
+    hex[1] = (simulation_time >> 16) & 0xFF;
+    hex[2] = (simulation_time >> 8) & 0xFF;
+    hex[3] = simulation_time & 0xFF;
+
     // Send 32 bit simulation time of when process is finished to standard input of process
+    printf("simulation time: %d", simulation_time);
+    write(fd2[1], hex, sizeof(hex));
     
     // Ssend SIGTERM signal to process
     kill(process->pid, SIGTERM);
     
-    // Read 64 byte string from output of process and include in execution transcript
+    // Read 64 byte string from output of process
+    read(fd1[0], sha256, 64);
 
-    return sha256;
+    return 0;
 }

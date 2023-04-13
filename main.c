@@ -105,8 +105,8 @@ int main(int argc, char *argv[]) {
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
             
             // Terminate real process
-            char* sha256 = terminate_process(current_process, simulation_time);
-            printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
+            //char* sha256 = terminate_process(current_process, simulation_time);
+            //printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
 
             // Free process memory
             free_process_memory(memory, current_process);
@@ -189,16 +189,16 @@ int main(int argc, char *argv[]) {
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
             
             // Suspend current process
-            suspend_process(current_process, simulation_time);
+            //suspend_process(current_process, simulation_time);
 
             // Different methods to control real process about to run, depending on whether it is starting or resuming
             // If process is just starting and does not yet have a pid
             if (process_to_run->pid==-1){
-                run_process(process_to_run, simulation_time);
+                //run_process(process_to_run, simulation_time);
             }
             // If resuming
             else {
-                resume_process(process_to_run, simulation_time);
+                //resume_process(process_to_run, simulation_time);
             }
             
         }
