@@ -8,7 +8,7 @@
 #include "process_manager.h"
 #include "queue.h"
 
-process_t *create_process(int time_arrived, char* process_name, int service_time, int memory_requirement){
+process_t *create_process(int time_arrived, char *process_name, int service_time, int memory_requirement){
     process_t *process = malloc(sizeof(process_t));
     process->time_arrived = time_arrived;
     strcpy(process->process_name, process_name);
@@ -22,6 +22,10 @@ process_t *create_process(int time_arrived, char* process_name, int service_time
     return process;
 }
 
+void free_process(process_t *process){
+    //free(process->process_name);
+    free(process);
+}
 
 void print_process(process_t *process){
     if (process==NULL){
@@ -62,11 +66,14 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
             return NULL;
         }
         node_t *node = ready_queue->front;
+        if (node->process==NULL){
+            return NULL;
+        }
         for (int i=0; i<ready_queue->size; i++){
             // printf("iterating: \n");
             // print_process(node->process);
-            if (shortest_service_time==-1 || node->process->service_time<shortest_service_time || (node->process->service_time==shortest_service_time && node->process->time_arrived<process_to_run->time_arrived)
-                    || (node->process->service_time==shortest_service_time && node->process->time_arrived==process_to_run->time_arrived && strcmp(node->process->process_name, process_to_run->process_name)<0)){
+            if (process_to_run!=NULL&&(shortest_service_time==-1 || node->process->service_time<shortest_service_time || (node->process->service_time==shortest_service_time && node->process->time_arrived<process_to_run->time_arrived)
+                    || (node->process->service_time==shortest_service_time && node->process->time_arrived==process_to_run->time_arrived && strcmp(node->process->process_name, process_to_run->process_name)<0))){
                 // printf("found shorter\n");
                 process_to_run = node->process;
                 shortest_service_time = node->process->service_time;
@@ -85,8 +92,10 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         }
         // printf("process to run:\n");
         // print_process(process_to_run);
-        process_to_run->state = RUNNING;
-        remove_from_queue(ready_queue, process_to_run);
+        if (process_to_run!=NULL){
+            process_to_run->state = RUNNING;
+            remove_from_queue(ready_queue, process_to_run);
+        }
         // printf("shortest service time: %d\n", shortest_service_time);
     } 
 
@@ -185,6 +194,7 @@ void free_process_memory(int *memory, process_t *process){
     for (int i=process->memory_address; i<process->memory_address+process->memory_requirement; i++){
         memory[i] = 0;
     }
+
     //printf("freed\n");
 }
 
@@ -280,7 +290,7 @@ int run_process(process_t *process, int simulation_time){
         close(fd2[1]);  // close pipe2 write side
         dup2(stdin_copy, STDIN_FILENO);
         dup2(stdout_copy, STDOUT_FILENO);
-        printf("process output: %x\n", process_output);
+        printf("process output: %s\n", process_output);
 
         // Verify that the byte read is the same as the last byte that was sent
         if (process_output[0]==hex[3]){
@@ -377,7 +387,7 @@ int resume_process(process_t *process, int simulation_time){
     close(fd2[1]);  // close pipe2 write side
     dup2(stdin_copy, STDIN_FILENO);
     dup2(stdout_copy, STDOUT_FILENO);
-    printf("process output: %x\n", process_output);
+    printf("process output: %s\n", process_output);
 
     // Verify that the byte read is the same as the last byte that was sent
     if (process_output[0]==hex[3]){

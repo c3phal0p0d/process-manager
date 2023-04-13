@@ -105,13 +105,10 @@ int main(int argc, char *argv[]) {
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
             
             // Terminate real process
-            char sha256[64];
-            terminate_process(current_process, simulation_time, sha256);
-            printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
+            // char sha256[64];
+            // terminate_process(current_process, simulation_time, sha256);
+            // printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
 
-            // Free process memory
-            free_process_memory(memory, current_process);
-            
             // Calculate performance statistics for process
             process_turnaround_time = simulation_time-current_process->time_arrived;
             total_execution_time += process_turnaround_time;
@@ -120,6 +117,9 @@ int main(int argc, char *argv[]) {
             if (max_time_overhead==-1 || (process_time_overhead > max_time_overhead)){
                 max_time_overhead = process_time_overhead;
             }
+
+            // Free process memory
+            free_process_memory(memory, current_process);
         } 
 
         // Allocate memory to processes and add them to the ready queue
@@ -191,23 +191,26 @@ int main(int argc, char *argv[]) {
             
             // Suspend current process
             if (current_process!=NULL){
-                suspend_process(current_process, simulation_time);
+                // suspend_process(current_process, simulation_time);
             }
 
             // Different methods to control real process about to run, depending on whether it is starting or resuming
             // If process is just starting and does not yet have a pid
             if (process_to_run->pid==-1){
-                run_process(process_to_run, simulation_time);
+                // run_process(process_to_run, simulation_time);
                 //printf("in main, processs id = %d\n", process_to_run->pid);
             }
             // If resuming
             else {
-                resume_process(process_to_run, simulation_time);
+                // resume_process(process_to_run, simulation_time);
             }
             
         }
 
         // Schedule next process to run
+        // if (current_process->state==FINISHED){
+        //     free_process(current_process);
+        // }
         current_process = process_to_run; //schedule_process(ready_queue, scheduler, current_process);
         if (current_process!=NULL){
             current_process->state = RUNNING;
@@ -230,8 +233,11 @@ int main(int argc, char *argv[]) {
     printf("Makespan %d\n", simulation_time-quantum);
 
     // Cleanup
+    free_queue(processes_from_file);
     free(processes_from_file);
+    free_queue(input_queue);
     free(input_queue);
+    free_queue(ready_queue);
     free(ready_queue);
 
     return 0;
