@@ -25,7 +25,6 @@ typedef struct process_t {
 } process_t;
 
 process_t *create_process(int time_arrived, char* process_name, int service_time, int memory_requirement);
-void free_process(process_t *process);
 int run_process(process_t *process, int simulation_time);
 int suspend_process(process_t *process, int simulation_time);
 int resume_process(process_t *process, int simulation_time);

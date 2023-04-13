@@ -21,14 +21,6 @@ node_t *create_node(process_t *process){
     return node;
 }
 
-void free_node(node_t *node){
-    free_process(node->process);
-    free(node->process);
-    free_node(node->next);
-    free(node->next);
-    free(node);
-}
-
 int is_empty(queue_t *queue){
     return (queue->front==NULL);
 }
@@ -38,19 +30,14 @@ void enqueue(queue_t *queue, process_t *process){
 
     if (is_empty(queue)){
         queue->front = node;
-        queue->front->next = NULL;
         queue->rear = node;
-        queue->rear->next = NULL;
         queue->size++;
-
         return;
     }
 
     queue->rear->next = node;
     queue->rear = node;
-    queue->rear->next = NULL;
     queue->size++;
-    
 }
 
 process_t *dequeue(queue_t *queue){
@@ -58,19 +45,16 @@ process_t *dequeue(queue_t *queue){
         return NULL;
     }
 
-    node_t *tmp = queue->front;
+    node_t *front = queue->front;
     queue->front = queue->front->next;
 
     if (queue->front==NULL){
         queue->rear=NULL;
     }
 
-    //process_t *process = tmp->process;
     queue->size--;
-    
-    //free(tmp);
 
-    return tmp->process;
+    return front->process;
 }
 
 int remove_from_queue(queue_t *queue, process_t *process){
@@ -97,11 +81,6 @@ int remove_from_queue(queue_t *queue, process_t *process){
         node = node->next;
     }
 
-    free_node(prev_node);
-    free(prev_node);
-    free_node(node);
-    free(node);
-
     return -1;  // process not found in queue
 }
 
@@ -111,42 +90,29 @@ void print_queue(queue_t *queue){
         return;
     }
 
-    node_t *tmp = queue->front;
+    node_t *node = queue->front;
     for (int i=0; i<queue->size; i++){
-        if (tmp == NULL){
+        if (node == NULL){
             printf("NULL\n");
             return;
         } 
         else {
-            print_process(tmp->process);
-            tmp = tmp->next;
+            print_process(node->process);
+            node = node->next;
         }
     }
-
-    free_node(tmp);
-    free(tmp);
 }
 
 void free_queue(queue_t *queue){
-    if (!is_empty(queue)){
-        node_t *node = queue->front;
-        node_t *tmp;
-        while (!is_empty(queue)){
-            tmp = node;
-            node = node->next;
-        }
+    assert(!is_empty(queue));
 
-        free_node(tmp);
-        free(tmp);
-        
-        free_node(node);
+    node_t *node = queue->front;
+
+    while (!is_empty(queue)){
+        node = node->next;
         free(node);
-        free(queue->front);
-        free(queue->rear);
-        free(queue);
-        return;
     }
 
-    free(queue->front);
-    free(queue->rear);
+    free(node);
+    free(queue);
 }
