@@ -191,11 +191,28 @@ void free_process_memory(int *memory, process_t *process){
 /************************************************************/
 /* Functions for controlling real processes, used in task 4 */
 /************************************************************/
+void convert_int_to_hex(int num, unsigned char *hex){
+    // Adapted from https://stackoverflow.com/questions/3784263/converting-an-int-into-a-4-byte-char-array-c
+    hex[0] = (num >> 24) & 0xFF;
+    hex[1] = (num >> 16) & 0xFF;
+    hex[2] = (num >> 8) & 0xFF;
+    hex[3] = num & 0xFF;
+
+    printf("%x %x %x %x\n", hex[0], hex[1], hex[2], hex[3]);
+}
+
 int run_process(process_t *process, int simulation_time){
+    printf("running process...\n");
+
     // Set up pipes for two-way communication
     int fd1[2], fd2[2];
     pipe(fd1);
     pipe(fd2);
+    // Store pipes in corresponding process struct so it can be used later to communicate with the same process
+    process->fds[0][0] = fd1[0];
+    process->fds[0][1] = fd1[1];
+    process->fds[1][0] = fd2[0];
+    process->fds[1][1] = fd2[1];
 
     // Fork child process
     pid_t root_pid = getpid();
@@ -204,25 +221,23 @@ int run_process(process_t *process, int simulation_time){
         perror("fork error\n");
         exit(1);
     }
-
-    process->pid = process_pid;
-    // Store pipe in corresponding process struct so it can be used later to communicate with the same process
-    process->fds[0][0] = fd1[0];
-    process->fds[0][1] = fd1[1];
-    process->fds[1][0] = fd2[0];
-    process->fds[1][1] = fd2[1];
     
     // Child process
     if (getpid()!=root_pid){
-        // printf("in child process, pid: %d\n", getpid());
+        printf("in child process, pid: %d\n", getpid());
 
+        process->pid = getpid();
+
+        // Set up pipes for communication with process manager
         close(fd1[0]);                  // close pipe1 read side
         dup2(fd1[1], STDOUT_FILENO);    // redirect stdout
+        //close(fd1[1]);                  // close pipe1 write side
         close(fd2[1]);                  // close pipe2 write side
         dup2(fd2[0], STDIN_FILENO);     // redirect stdin
+        //close(fd2[0]);                  // close pipe2 read side
 
         // Create instance of process
-        char *args[] = {"-v", process->process_name, NULL};
+        char *args[] = {"", "-v", process->process_name, NULL};
         if (execvp("./process", args)==-1){
             perror("exec error\n");
             exit(1);
@@ -231,32 +246,58 @@ int run_process(process_t *process, int simulation_time){
     }
     // Parent process
     else {
-        // printf("in parent process, pid: %d\n", getpid());
+        printf("in parent process, pid: %d\n", getpid());
 
-        close(fd1[1]);                  // close pipe1 write side
-        dup2(fd1[0], STDIN_FILENO);     // redirect stdin
-        close(fd2[0]);                  // close pipe2 read side
-        dup2(fd2[1], STDOUT_FILENO);    // redirect stdout
+        //printf("process pid: %d\n", process_pid);
+
+        // process->pid = process_pid;
 
         // Convert simulation time from integer to 4-byte hex reprentation
         unsigned char hex[4];
-        hex[0] = (simulation_time >> 24) & 0xFF;
-        hex[1] = (simulation_time >> 16) & 0xFF;
-        hex[2] = (simulation_time >> 8) & 0xFF;
-        hex[3] = simulation_time & 0xFF;
+        convert_int_to_hex(simulation_time, hex);
+        // hex[0] = (simulation_time >> 24) & 0xFF;
+        // hex[1] = (simulation_time >> 16) & 0xFF;
+        // hex[2] = (simulation_time >> 8) & 0xFF;
+        // hex[3] = simulation_time & 0xFF;
+
+        printf("simulation time: %d\n", simulation_time);
+        printf("in hex: %s\n", hex);
+
+        // Make copies of stdin and stdout to be restored later
+        int stdin_copy = dup(STDIN_FILENO);
+        int stdout_copy = dup(STDOUT_FILENO);
+        
+        // Set up pipes for communication with process instance
+        close(fd1[1]);                  // close pipe1 write side
+        dup2(fd1[0], STDIN_FILENO);     // redirect stdin
+        //close(fd1[0]);                  // close pipe1 read side
+        close(fd2[0]);                  // close pipe2 read side
+        dup2(fd2[1], STDOUT_FILENO);    // redirect stdout
+        //close(fd2[1]);                 // close pipe2 write side
 
         // Send 32 bit simulation time of when process is started to standard input of process
-        printf("simulation time: %d", simulation_time);
         write(fd2[1], hex, sizeof(hex));
         // write(fd2[1], hex[0], sizeof(hex[0]));
         // write(fd2[1], hex[1], sizeof(hex[1]));
         // write(fd2[1], hex[2], sizeof(hex[2]));
         // write(fd2[1], hex[3], sizeof(hex[3]));
 
-        // Read 1 byte from standard output of process and verify it is the same as the last byte that was sent
+        sleep(1);
+
+        // Read 1 byte from standard output of process
         char process_output[8];
         read(fd1[0], process_output, sizeof(process_output));
+
+        // Switch back to standard input/output
+        close(fd1[0]);
+        close(fd2[1]);  
+        dup2(stdin_copy, STDIN_FILENO);
+        dup2(stdout_copy, STDOUT_FILENO);
+        printf("process output: %x\n", process_output);
+
+        // Verify that the 1 byte read the same as the last byte that was sent
         if (process_output[0]==hex[3]){
+            printf("same\n");
             return 0;
         }
 
@@ -276,19 +317,22 @@ int run_process(process_t *process, int simulation_time){
 }
 
 int suspend_process(process_t *process, int simulation_time){
+    printf("suspending process...\n");
+
     int fd1[2], fd2[2];
     memcpy(fd1, process->fds[0], 2);
     memcpy(fd2, process->fds[1], 2);
 
     // Convert simulation time from integer to 4-byte hex reprentation
     unsigned char hex[4];
-    hex[0] = (simulation_time >> 24) & 0xFF;
-    hex[1] = (simulation_time >> 16) & 0xFF;
-    hex[2] = (simulation_time >> 8) & 0xFF;
-    hex[3] = simulation_time & 0xFF;
+    convert_int_to_hex(simulation_time, hex);
+    // hex[0] = (simulation_time >> 24) & 0xFF;
+    // hex[1] = (simulation_time >> 16) & 0xFF;
+    // hex[2] = (simulation_time >> 8) & 0xFF;
+    // hex[3] = simulation_time & 0xFF;
 
     // Send 32 bit simulation time of when process is suspended to standard input of process
-    printf("simulation time: %d", simulation_time);
+    printf("simulation time: %d\n", simulation_time);
     write(fd2[1], hex, sizeof(hex));
     
     // Send SIGSTP signal to process
@@ -304,19 +348,22 @@ int suspend_process(process_t *process, int simulation_time){
 }
 
 int resume_process(process_t *process, int simulation_time){
+    printf("resuming process...\n");
+
     int fd1[2], fd2[2];
     memcpy(fd1, process->fds[0], 2);
     memcpy(fd2, process->fds[1], 2);
 
-    // Convert simulation time from integer to 4-byte hex reprentation
+    // Convert simulation time from integer to 4-byte hex representation
     unsigned char hex[4];
-    hex[0] = (simulation_time >> 24) & 0xFF;
-    hex[1] = (simulation_time >> 16) & 0xFF;
-    hex[2] = (simulation_time >> 8) & 0xFF;
-    hex[3] = simulation_time & 0xFF;
+    convert_int_to_hex(simulation_time, hex);
+    // hex[0] = (simulation_time >> 24) & 0xFF;
+    // hex[1] = (simulation_time >> 16) & 0xFF;
+    // hex[2] = (simulation_time >> 8) & 0xFF;
+    // hex[3] = simulation_time & 0xFF;
     
     // Send 32 bit simulation time of when process is resumed to standard input of process
-    printf("simulation time: %d", simulation_time);
+    printf("simulation time: %d\n", simulation_time);
     write(fd2[1], hex, sizeof(hex));
 
     // Send SIGCONT signal to process
@@ -333,19 +380,22 @@ int resume_process(process_t *process, int simulation_time){
 }
 
 int terminate_process(process_t *process, int simulation_time, char *sha256){
+    printf("terminating process...\n");
+
     int fd1[2], fd2[2];
     memcpy(fd1, process->fds[0], 2);
     memcpy(fd2, process->fds[1], 2);
 
     // Convert simulation time from integer to 4-byte hex reprentation
     unsigned char hex[4];
-    hex[0] = (simulation_time >> 24) & 0xFF;
-    hex[1] = (simulation_time >> 16) & 0xFF;
-    hex[2] = (simulation_time >> 8) & 0xFF;
-    hex[3] = simulation_time & 0xFF;
+    convert_int_to_hex(simulation_time, hex);
+    // hex[0] = (simulation_time >> 24) & 0xFF;
+    // hex[1] = (simulation_time >> 16) & 0xFF;
+    // hex[2] = (simulation_time >> 8) & 0xFF;
+    // hex[3] = simulation_time & 0xFF;
 
     // Send 32 bit simulation time of when process is finished to standard input of process
-    printf("simulation time: %d", simulation_time);
+    printf("simulation time: %d\n", simulation_time);
     write(fd2[1], hex, sizeof(hex));
     
     // Ssend SIGTERM signal to process
