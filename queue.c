@@ -53,16 +53,20 @@ process_t *dequeue(queue_t *queue){
         return NULL;
     }
 
-    node_t *front = queue->front;
+    node_t *tmp = queue->front;
     queue->front = queue->front->next;
+
+    //process_t *process = malloc(sizeof(process_t));
+    //process = tmp->process;
 
     if (queue->front==NULL){
         queue->rear=NULL;
     }
 
     queue->size--;
+    //free(tmp);
 
-    return front->process;
+    return tmp->process;
 }
 
 int remove_from_queue(queue_t *queue, process_t *process){
@@ -83,6 +87,8 @@ int remove_from_queue(queue_t *queue, process_t *process){
                 prev_node->next = node->next;
             }
             queue->size--;
+            //free_node(node);
+            //free(node);
             return 0;
         }
         prev_node = node;
@@ -98,17 +104,19 @@ void print_queue(queue_t *queue){
         return;
     }
 
-    node_t *node = queue->front;
+    node_t *tmp = queue->front;
     for (int i=0; i<queue->size; i++){
-        if (node == NULL){
+        if (tmp == NULL){
             printf("NULL\n");
             return;
         } 
         else {
-            print_process(node->process);
-            node = node->next;
+            print_process(tmp->process);
+            tmp = tmp->next;
         }
     }
+
+    free(tmp);
 }
 
 void free_queue(queue_t *queue){

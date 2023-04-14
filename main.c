@@ -215,6 +215,9 @@ int main(int argc, char *argv[]) {
         }
 
         // Schedule next process to run
+        if (current_process!=NULL && current_process->state==FINISHED){
+            free(current_process);
+        }
         current_process = process_to_run; //schedule_process(ready_queue, scheduler, current_process);
         if (current_process!=NULL){
             current_process->state = RUNNING;
