@@ -108,8 +108,8 @@ int main(int argc, char *argv[]) {
             
             // Terminate real process
             char sha256[64+1];
-            sha256[64] = '\0';
             terminate_process(current_process, simulation_time, sha256);
+            sha256[64] = '\0';
             printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
 
             // Free process memory

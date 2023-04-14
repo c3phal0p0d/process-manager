@@ -234,6 +234,9 @@ int run_process(process_t *process, int simulation_time){
         close(fd2[1]);                  // close pipe2 write side
         dup2(fd2[0], STDIN_FILENO);     // redirect stdin
 
+        close(fd1[1]);
+        close(fd2[0]);
+
         // Create instance of process
         char *args[] = {"", process->process_name, NULL};
         if (execvp("./process", args)==-1){
@@ -411,8 +414,8 @@ int terminate_process(process_t *process, int simulation_time, char *sha256){
     read(process->fds[0][0], sha256, 64);
 
     // Switch back to standard input/output
-    close(process->fds[0][0]);  // close pipe1 read side
-    close(process->fds[1][1]);  // close pipe2 write side
+    // close(process->fds[0][0]);  // close pipe1 read side
+    // close(process->fds[1][1]);  // close pipe2 write side
     dup2(stdin_copy, STDIN_FILENO);
     dup2(stdout_copy, STDOUT_FILENO);
     //printf("sha256: %s\n", sha256);
