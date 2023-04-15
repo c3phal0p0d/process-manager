@@ -24,7 +24,6 @@ node_t *create_node(process_t *process){
 void free_node(node_t *node){
     //free_process(node->process);
     free(node->process);
-    free_node(node->next);
     free(node->next);
     free(node);
 }
@@ -74,7 +73,7 @@ process_t *dequeue(queue_t *queue){
     return process;
 }
 
-int remove_from_queue(queue_t *queue, process_t *process){
+process_t *remove_from_queue(queue_t *queue, process_t *process){
     // printf("removing from queue: ");
     // print_process(process);
     node_t *tmp = queue->front;
@@ -91,18 +90,22 @@ int remove_from_queue(queue_t *queue, process_t *process){
             else {
                 prev->next = tmp->next;
             }
+            process_t *process = tmp->process;
             queue->size--;
             //free(prev);
-            //free(tmp);
+            free(tmp);
             //free_node(node);
             //free(node);
-            return 0;
+            return process;
         }
         prev = tmp;
         tmp = tmp->next;
     }
 
-    return -1;  // process not found in queue
+    //free(prev);
+    free(tmp);
+
+    return NULL;  // process not found in queue
 }
 
 void print_queue(queue_t *queue){

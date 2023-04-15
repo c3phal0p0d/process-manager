@@ -85,8 +85,8 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         }
         // printf("process to run:\n");
         // print_process(process_to_run);
+        process_to_run = remove_from_queue(ready_queue, process_to_run);
         process_to_run->state = RUNNING;
-        remove_from_queue(ready_queue, process_to_run);
         // printf("shortest service time: %d\n", shortest_service_time);
     } 
 

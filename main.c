@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
     process_t *process_to_run = NULL;
     //node_t *process_to_run_node = NULL;
     node_t *node = NULL;
+    node_t *prev = NULL;
     //process_t *process_from_file = NULL;
 
     int num_cycles = 0;
@@ -98,26 +99,32 @@ int main(int argc, char *argv[]) {
 
         // Add processes to input queue if their arrival time is less than or equal to the current simulation time
         // print_queue(processes_from_file);
-        node_t *node = processes_from_file->front;
-        node_t *prev = NULL;
+        node = processes_from_file->front;
         
         // printf("Process: ");
         // print_process(node->process);
+
+        int process_added_to_input_queue = 0;
 
         while (node!=NULL){
             // printf("time arrived: %d\n", node->process->time_arrived);
 
             if ((node->process->time_arrived<=simulation_time)){// && node->process->time_arrived>(simulation_time - quantum)){
+                process_added_to_input_queue = 1;
                 enqueue(input_queue, node->process);
                 // print_process(node->process);
                 num_proc_from_file_left--;
                 // printf("processes file queue:\n");
                 // print_queue(processes_from_file);
+            } 
+            else {
+                process_added_to_input_queue = 0;
             }
+
             prev = node;
             node = node->next;
 
-            if ((prev->process->time_arrived<=simulation_time)){
+            if (process_added_to_input_queue){
                 dequeue(processes_from_file);
             }
         }
@@ -164,24 +171,29 @@ int main(int argc, char *argv[]) {
                     if (allocated_memory_address!=-1){
                         printf("%d,READY,process_name=%s,assigned_at=%d\n", simulation_time, node->process->process_name, allocated_memory_address);
                         node->process->state = READY;
-                        enqueue(ready_queue, node->process);
-                        remove_from_queue(input_queue, node->process);
+                        node_t *next = node->next;
+                        process_t *process = remove_from_queue(input_queue, node->process);
+                        enqueue(ready_queue, process);
+                        //remove_from_queue(input_queue, node->process);
 
-                        if (node->next==NULL){
+                        if (next==NULL){
                             break;
                         }
-                        node = node->next;
+                        node = next;
                     }
                 }
                 else {
                     node->process->state = READY;
+                    node_t *next = node->next;
                     enqueue(ready_queue, node->process);
-                    remove_from_queue(input_queue, node->process);
+                    process_t *process = remove_from_queue(input_queue, node->process);
 
-                    if (node->next==NULL){
+                    if (next==NULL){
                         break;
                     }
-                    node = node->next;
+                    node = next;
+
+                    
 
                     // printf("Process: ");
                     // print_process(node->process);
@@ -267,11 +279,10 @@ int main(int argc, char *argv[]) {
 
     // Cleanup
     free(node);
-    free_queue(processes_from_file);
+    //free_queue(processes_from_file);
     free(processes_from_file);
-    free_queue(input_queue);
     free(input_queue);
-    free_queue(ready_queue);
+    //free_queue(ready_queue);
     free(ready_queue);
 
     return 0;
