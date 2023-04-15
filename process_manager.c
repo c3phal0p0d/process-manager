@@ -33,7 +33,7 @@ void print_process(process_t *process){
     printf("service time: %d, ", process->service_time);
     printf("memory_requirement: %d, ", process->memory_requirement);
     printf("memory address: %d, ", process->memory_address);
-    printf("pid: %d, ", process->pid);
+    printf("pid: %d, \n", process->pid);
 }
 
 process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *current_process){
@@ -45,8 +45,7 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
         // printf("sjf\n");
         // If current process has not yet finished, it will continue to run
         if (current_process!=NULL && current_process->service_time > current_process->run_time){
-            process_to_run = current_process;
-            return process_to_run;
+            return current_process;
         }
 
         // If current process has finished running
@@ -81,6 +80,7 @@ process_t *schedule_process(queue_t *ready_queue, char *scheduler, process_t *cu
             if (node->next==NULL){
                 break;
             }
+            
             node = node->next;
         }
         // printf("process to run:\n");

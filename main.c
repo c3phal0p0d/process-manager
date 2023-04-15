@@ -10,10 +10,10 @@
 #include "queue.h"
 
 int main(int argc, char *argv[]) {
-    char *filename;
-    char *scheduler;
-    char *memory_strategy;
-    int quantum;
+    char *filename = NULL;
+    char *scheduler = NULL;
+    char *memory_strategy = NULL;
+    int quantum = -1;
 
     // Process command-line arguments
     int arg;
@@ -43,15 +43,19 @@ int main(int argc, char *argv[]) {
     read_file(filename, processes_from_file);
     int num_proc_from_file_left = processes_from_file->size;
 
-    // printf("*** Processes from file ***\n");
-    // print_queue(processes_from_file);
+    //printf("*** Processes from file ***\n");
+    //print_queue(processes_from_file);
 
     int memory[2048] = {0};
 
     queue_t *input_queue = initialize_queue();
     queue_t *ready_queue = initialize_queue();
     process_t *current_process = NULL;
+    //node_t *current_process_node = NULL;
     process_t *process_to_run = NULL;
+    //node_t *process_to_run_node = NULL;
+    node_t *node = NULL;
+    //process_t *process_from_file = NULL;
 
     int num_cycles = 0;
     int simulation_time = 0;
@@ -74,11 +78,28 @@ int main(int argc, char *argv[]) {
         
         // printf("*** CYCLE INFO ***\n");
         // printf("Cycle: %d\n", num_cycles);
-        // printf("Simualation time: %d\n", simulation_time);
+        //printf("Simualation time: %d\n", simulation_time);
+
+        // process_from_file = processes_from_file->front->process;
+
+        // while (process_from_file!=NULL){
+        //     printf("process from file: ");
+        //     print_process(process_from_file);
+
+        //     if (process_from_file->time_arrived<=simulation_time){
+        //         enqueue(input_queue, dequeue(processes_from_file));
+        //         num_proc_from_file_left--;
+        //         process_from_file = processes_from_file->front->process;
+        //     }
+        //     else {
+        //         break;
+        //     }
+        // }
 
         // Add processes to input queue if their arrival time is less than or equal to the current simulation time
         // print_queue(processes_from_file);
         node_t *node = processes_from_file->front;
+        node_t *prev = NULL;
         
         // printf("Process: ");
         // print_process(node->process);
@@ -88,17 +109,21 @@ int main(int argc, char *argv[]) {
 
             if ((node->process->time_arrived<=simulation_time)){// && node->process->time_arrived>(simulation_time - quantum)){
                 enqueue(input_queue, node->process);
-                dequeue(processes_from_file);
                 // print_process(node->process);
                 num_proc_from_file_left--;
                 // printf("processes file queue:\n");
                 // print_queue(processes_from_file);
             }
-
+            prev = node;
             node = node->next;
+
+            if ((prev->process->time_arrived<=simulation_time)){
+                dequeue(processes_from_file);
+            }
         }
+
         
-        // printf("input queue size: %d\n", input_queue->size);
+        //printf("input queue size: %d\n", input_queue->size);
 
         //num_proc_left = input_queue->size + ready_queue->size;
 
@@ -178,7 +203,6 @@ int main(int argc, char *argv[]) {
         //     printf("*** Ready queue ***\n");
         //     print_queue(ready_queue);
         // }
-
         // num_proc_left = input_queue->size + ready_queue->size;
         // printf("input queue size: %d\n", input_queue->size);
         // printf("ready queue size: %d\n", ready_queue->size);
@@ -217,7 +241,9 @@ int main(int argc, char *argv[]) {
         // Schedule next process to run
         if (current_process!=NULL && current_process->state==FINISHED){
             free(current_process);
+            current_process = NULL;
         }
+        
         current_process = process_to_run; //schedule_process(ready_queue, scheduler, current_process);
         if (current_process!=NULL){
             current_process->state = RUNNING;
@@ -240,6 +266,7 @@ int main(int argc, char *argv[]) {
     printf("Makespan %d\n", simulation_time-quantum);
 
     // Cleanup
+    free(node);
     free_queue(processes_from_file);
     free(processes_from_file);
     free_queue(input_queue);

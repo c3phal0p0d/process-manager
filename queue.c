@@ -53,7 +53,9 @@ process_t *dequeue(queue_t *queue){
         return NULL;
     }
 
-    node_t *tmp = queue->front;
+    node_t *tmp = NULL;
+    tmp = queue->front;
+    process_t *process = tmp->process;
     queue->front = queue->front->next;
 
     //process_t *process = malloc(sizeof(process_t));
@@ -64,35 +66,40 @@ process_t *dequeue(queue_t *queue){
     }
 
     queue->size--;
-    //free(tmp);
+    free(tmp);
+    tmp = NULL;
 
-    return tmp->process;
+    //print_process(process);
+
+    return process;
 }
 
 int remove_from_queue(queue_t *queue, process_t *process){
     // printf("removing from queue: ");
     // print_process(process);
-    node_t *node = queue->front;
-    node_t *prev_node = NULL;
+    node_t *tmp = queue->front;
+    node_t *prev = NULL;
     for (int i=0; i<queue->size; i++){
-        if (node->process==process){
-            if (prev_node==NULL){   // front of queue
-                queue->front = node->next;
+        if (tmp->process==process){
+            if (prev==NULL){   // front of queue
+                queue->front = tmp->next;
             }
-            else if (node->next==NULL){
-                prev_node->next = NULL;
-                queue->rear = prev_node;
+            else if (tmp->next==NULL){
+                prev->next = NULL;
+                queue->rear = prev;
             }
             else {
-                prev_node->next = node->next;
+                prev->next = tmp->next;
             }
             queue->size--;
+            //free(prev);
+            //free(tmp);
             //free_node(node);
             //free(node);
             return 0;
         }
-        prev_node = node;
-        node = node->next;
+        prev = tmp;
+        tmp = tmp->next;
     }
 
     return -1;  // process not found in queue
