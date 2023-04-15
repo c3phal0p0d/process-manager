@@ -22,7 +22,6 @@ node_t *create_node(process_t *process){
 }
 
 void free_node(node_t *node){
-    //free_process(node->process);
     free(node->process);
     free(node->next);
     free(node);
@@ -32,6 +31,7 @@ int is_empty(queue_t *queue){
     return (queue->front==NULL);
 }
 
+// Implementation of the enqueue operation which adds a new process to the end of the queue
 void enqueue(queue_t *queue, process_t *process){
     node_t *node = create_node(process);
 
@@ -47,42 +47,41 @@ void enqueue(queue_t *queue, process_t *process){
     queue->size++;
 }
 
+// Implementation of the dequeue operation which removes the first process in the queue and returns it
 process_t *dequeue(queue_t *queue){
     if (is_empty(queue)){
         return NULL;
     }
 
-    node_t *tmp = NULL;
-    tmp = queue->front;
+    // Remove node from front of queue, making the next node the new front node
+    node_t *tmp = queue->front;
     process_t *process = tmp->process;
     queue->front = queue->front->next;
 
-    //process_t *process = malloc(sizeof(process_t));
-    //process = tmp->process;
-
+    // Queue is empty after dequeue operation
     if (queue->front==NULL){
         queue->rear=NULL;
     }
 
     queue->size--;
+
     free(tmp);
     tmp = NULL;
-
-    //print_process(process);
 
     return process;
 }
 
+// Method to remove a specified process from any position in the queue
 process_t *remove_from_queue(queue_t *queue, process_t *process){
-    // printf("removing from queue: ");
-    // print_process(process);
     node_t *tmp = queue->front;
     node_t *prev = NULL;
     for (int i=0; i<queue->size; i++){
         if (tmp->process==process){
-            if (prev==NULL){   // front of queue
+            // Front of queue
+            if (prev==NULL){
                 queue->front = tmp->next;
             }
+            // End of queue
             else if (tmp->next==NULL){
                 prev->next = NULL;
                 queue->rear = prev;
@@ -90,22 +89,23 @@ process_t *remove_from_queue(queue_t *queue, process_t *process){
             else {
                 prev->next = tmp->next;
             }
+
             process_t *process = tmp->process;
-            queue->size--;
-            //free(prev);
             free(tmp);
-            //free_node(node);
-            //free(node);
+
+            queue->size--;
+
             return process;
         }
+
         prev = tmp;
         tmp = tmp->next;
     }
 
-    //free(prev);
     free(tmp);
 
-    return NULL;  // process not found in queue
+    // process not found in queue
+    return NULL;
 }
 
 void print_queue(queue_t *queue){
@@ -140,12 +140,12 @@ void free_queue(queue_t *queue){
 
         free_node(tmp);
         free(tmp);
-        
         free_node(node);
         free(node);
         free(queue->front);
         free(queue->rear);
         free(queue);
+
         return;
     }
 

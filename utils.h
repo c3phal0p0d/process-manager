@@ -3,6 +3,6 @@
 
 #include "queue.h"
 
-int read_file(char *filename, queue_t *input_queue);
+int read_file(char *filename, queue_t *queue);
 
 #endif

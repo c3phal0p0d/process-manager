@@ -35,28 +35,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // printf("*** Args ***\n");
-    // printf("%s, %s, %s, %d\n", filename, scheduler, memory_strategy, quantum);
-
     // Read processes from file
     queue_t *processes_from_file = initialize_queue();
     read_file(filename, processes_from_file);
     int num_proc_from_file_left = processes_from_file->size;
-
-    //printf("*** Processes from file ***\n");
-    //print_queue(processes_from_file);
 
     int memory[2048] = {0};
 
     queue_t *input_queue = initialize_queue();
     queue_t *ready_queue = initialize_queue();
     process_t *current_process = NULL;
-    //node_t *current_process_node = NULL;
     process_t *process_to_run = NULL;
-    //node_t *process_to_run_node = NULL;
     node_t *node = NULL;
-    //node_t *prev = NULL;
-    //process_t *process_from_file = NULL;
 
     int num_cycles = 0;
     int simulation_time = 0;
@@ -72,50 +62,17 @@ int main(int argc, char *argv[]) {
     int process_manager_started = 0;
 
     // Run process manager until there are no more processes in the input queue and no READY or RUNNING processes.
-    while ((!process_manager_started||num_proc_from_file_left>0||!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL))){   // !(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL)
-        //printf("%d\n", num_proc_from_file_left);
+    while (!process_manager_started||num_proc_from_file_left>0||!(is_empty(input_queue) && is_empty(ready_queue) && current_process==NULL)){
         process_manager_started = 1;
-        // printf("Cycle %d\n", num_cycles);
-        
-        // printf("*** CYCLE INFO ***\n");
-        // printf("Cycle: %d\n", num_cycles);
-        //printf("Simualation time: %d\n", simulation_time);
-
-        // process_from_file = processes_from_file->front->process;
-
-        // while (process_from_file!=NULL){
-        //     printf("process from file: ");
-        //     print_process(process_from_file);
-
-        //     if (process_from_file->time_arrived<=simulation_time){
-        //         enqueue(input_queue, dequeue(processes_from_file));
-        //         num_proc_from_file_left--;
-        //         process_from_file = processes_from_file->front->process;
-        //     }
-        //     else {
-        //         break;
-        //     }
-        // }
 
         // Add processes to input queue if their arrival time is less than or equal to the current simulation time
-        // print_queue(processes_from_file);
         node = processes_from_file->front;
-        
-        // printf("Process: ");
-        // print_process(node->process);
-
         int process_added_to_input_queue = 0;
-
         while (node!=NULL){
-            // printf("time arrived: %d\n", node->process->time_arrived);
-
-            if ((node->process->time_arrived<=simulation_time)){// && node->process->time_arrived>(simulation_time - quantum)){
+            if ((node->process->time_arrived<=simulation_time)){
                 process_added_to_input_queue = 1;
                 enqueue(input_queue, node->process);
-                // print_process(node->process);
                 num_proc_from_file_left--;
-                // printf("processes file queue:\n");
-                // print_queue(processes_from_file);
             } 
             else {
                 process_added_to_input_queue = 0;
@@ -128,11 +85,6 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        
-        //printf("input queue size: %d\n", input_queue->size);
-
-        //num_proc_left = input_queue->size + ready_queue->size;
-
         // Current process has finished running
         if (current_process && current_process->run_time >= current_process->service_time){
             printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", simulation_time, current_process->process_name, num_proc_left);
@@ -143,7 +95,7 @@ int main(int argc, char *argv[]) {
             sha256[64] = '\0';
             printf("%d,FINISHED-PROCESS,process_name=%s,sha=%s\n", simulation_time, current_process->process_name, sha256);
 
-            // Free process memory
+            // Free simulated process memory
             free_process_memory(memory, current_process);
             
             // Calculate performance statistics for process
@@ -156,7 +108,7 @@ int main(int argc, char *argv[]) {
             }
         } 
 
-        // Allocate memory to processes and add them to the ready queue
+        // Allocate simulated memory to processes and add them to the ready queue
         int allocated_memory_address;
         node = input_queue->front;
         for (int i=0; i<input_queue->size; i++){
@@ -164,7 +116,6 @@ int main(int argc, char *argv[]) {
             if ((node->process->time_arrived<=simulation_time && node->process->state==NONE)){
                 if (strcmp(memory_strategy, "best-fit")==0){
                     allocated_memory_address = allocate_process_memory(memory, node->process);
-                    //printf("memory address: %d\n", allocated_memory_address);
 
                     // If memory was successfully allocated to process, its state becomes READY
                     if (allocated_memory_address!=-1){
@@ -173,7 +124,6 @@ int main(int argc, char *argv[]) {
                         node_t *next = node->next;
                         process_t *process = remove_from_queue(input_queue, node->process);
                         enqueue(ready_queue, process);
-                        //remove_from_queue(input_queue, node->process);
 
                         if (next==NULL){
                             break;
@@ -191,54 +141,27 @@ int main(int argc, char *argv[]) {
                         break;
                     }
                     node = next;
-
-                    
-
-                    // printf("Process: ");
-                    // print_process(node->process);
                 }
             }
         }
 
-        // if (simulation_time>10 && simulation_time<40){
-        //     printf("Simulation time: %d\n", simulation_time);
-        //     printf("*** Processes from file ***\n");
-        //     print_queue(processes_from_file);
-        //     printf("*** Input queue ***\n");
-        //     print_queue(input_queue);
-        //     printf("*** Ready queue ***\n");
-        //     print_queue(ready_queue);
-        // }
-
-        // if (simulation_time==174){
-        //     printf("*** Ready queue ***\n");
-        //     print_queue(ready_queue);
-        // }
-        // num_proc_left = input_queue->size + ready_queue->size;
-        // printf("input queue size: %d\n", input_queue->size);
-        // printf("ready queue size: %d\n", ready_queue->size);
-        // printf("proc_remaining: %d\n", num_proc_left);
-
+        // Schedule the next process to be run
         process_to_run = schedule_process(ready_queue, scheduler, current_process);
-        // print_process(process_to_run);
         num_proc_left = input_queue->size + ready_queue->size;
         
         // Process to be run is just starting or resuming (thus different to current process)
         if (process_to_run!=NULL&&process_to_run!=current_process){
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
             
-            // Suspend current process
+            // Suspend current process if its state is not FINISHED
             if (current_process!=NULL&&current_process->state!=FINISHED){
-                //printf("suspending process..\n");
-                //print_process(current_process);
                 suspend_process(current_process, simulation_time);
             }
 
-            // Different methods to control real process about to run, depending on whether it is starting or resuming
+            // Different methods to control process about to run, depending on whether it is starting or resuming
             // If process is just starting and does not yet have a pid
             if (process_to_run->pid==-1){
                 run_process(process_to_run, simulation_time);
-                //printf("in main, processs id = %d\n", process_to_run->pid);
             }
             // If resuming
             else {
@@ -251,13 +174,14 @@ int main(int argc, char *argv[]) {
             resume_process(process_to_run, simulation_time);
         }
 
-        // Schedule next process to run
+        // Free process memory if it is finished
         if (current_process!=NULL && current_process->state==FINISHED){
             free(current_process);
             current_process = NULL;
         }
         
-        current_process = process_to_run; //schedule_process(ready_queue, scheduler, current_process);
+        // Switch from the current process to the next process, to be run in the next CPU cycle
+        current_process = process_to_run;
         if (current_process!=NULL){
             current_process->state = RUNNING;
             current_process->run_time += quantum;
@@ -265,11 +189,9 @@ int main(int argc, char *argv[]) {
 
         simulation_time += quantum;
         num_cycles++;
-
-        // printf("process: ");
-        // print_process(current_process);
     }
 
+    // Calculate performance statistics
     int turnaround_time = ceil((double)total_execution_time/num_processes);
     double avg_time_overhead = total_time_overhead/num_processes;
 
@@ -280,10 +202,8 @@ int main(int argc, char *argv[]) {
 
     // Cleanup
     free(node);
-    //free_queue(processes_from_file);
     free(processes_from_file);
     free(input_queue);
-    //free_queue(ready_queue);
     free(ready_queue);
 
     return 0;
