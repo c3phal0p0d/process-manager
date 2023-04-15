@@ -234,8 +234,8 @@ int run_process(process_t *process, int simulation_time){
         close(fd2[1]);                  // close pipe2 write side
         dup2(fd2[0], STDIN_FILENO);     // redirect stdin
 
-        close(fd1[1]);
-        close(fd2[0]);
+        //close(fd1[1]);
+        //close(fd2[0]);
 
         // Create instance of process
         char *args[] = {"", process->process_name, NULL};
