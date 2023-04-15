@@ -228,7 +228,9 @@ int main(int argc, char *argv[]) {
             printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", simulation_time, process_to_run->process_name, process_to_run->service_time - process_to_run->run_time);
             
             // Suspend current process
-            if (current_process!=NULL){
+            if (current_process!=NULL&&current_process->state!=FINISHED){
+                //printf("suspending process..\n");
+                //print_process(current_process);
                 suspend_process(current_process, simulation_time);
             }
 
