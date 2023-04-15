@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     process_t *process_to_run = NULL;
     //node_t *process_to_run_node = NULL;
     node_t *node = NULL;
-    node_t *prev = NULL;
+    //node_t *prev = NULL;
     //process_t *process_from_file = NULL;
 
     int num_cycles = 0;
@@ -121,7 +121,6 @@ int main(int argc, char *argv[]) {
                 process_added_to_input_queue = 0;
             }
 
-            prev = node;
             node = node->next;
 
             if (process_added_to_input_queue){
@@ -186,7 +185,7 @@ int main(int argc, char *argv[]) {
                     node->process->state = READY;
                     node_t *next = node->next;
                     enqueue(ready_queue, node->process);
-                    process_t *process = remove_from_queue(input_queue, node->process);
+                    remove_from_queue(input_queue, node->process);
 
                     if (next==NULL){
                         break;
